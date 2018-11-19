@@ -1,9 +1,12 @@
 /* Import fonts */
-@import url( 'https://fonts.googleapis.com/css?family=Open+Sans|Roboto');
+
+@import url('https://fonts.googleapis.com/css?family=Open+Sans|Roboto');
+/* Font stuff */
 
 body {
-  padding: 50px;
-  font: 14px "Open Sans", Arial, sans-serif;
+    font: 14px "Open Sans", Arial, sans-serif;
+    padding: 0;
+    margin: 0;
 }
 
 h1,
@@ -12,47 +15,93 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
-  margin: 10px 0;
+    font-family: "Roboto", sans-serif;
+    font-weight: 400;
+    margin: 0;
+    padding: 10px 0;
 }
 
 h1 {
-  font-size: 36px;
+    font-size: 36px;
 }
 
 h2 {
-  font-size: 30px;
+    font-size: 30px;
 }
 
 h3 {
-  font-size: 24px;
+    font-size: 24px;
 }
 
 h4 {
-  font-size: 20px;
+    font-size: 20px;
 }
 
 h5 {
-  font-size: 18px;
+    font-size: 18px;
 }
 
 h6 {
-  font-size: 16px;
+    font-size: 16px;
 }
 
-a {
-  color: #00B7FF;
+/* Classes */
+
+.centered {
+    text-align: center;
 }
+
+.full-width {
+    width: 100%;
+}
+
+.container {
+    display: block;
+    height: auto;
+    min-height: 100% !important;
+    box-sizing: border-box;
+}
+
+.button {
+    padding: 8px 16px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    display: inline-block;
+    margin: 5px;
+}
+
+.button:hover {
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)
+}
+
+/* Colors */
+
+.blue {
+    background-color: #1976d2;
+}
+
+.blue .lighter {
+    background-color: #63a4ff;
+}
+
+/* Animations */
 
 .popup {
-  display: inline-block;
-  vertical-align: middle;
-  
-  transition-property: transform;
-  transition-duration: .3s;
+    display: inline-block;
+    vertical-align: middle;
+    transition-property: transform;
+    transition-duration: .3s;
 }
 
 .popup:hover {
-  transform: scale(1.1);
+    transform: scale(1.1);
+}
+
+/* Stupid shit to fix stupidness */
+
+*,
+*::after,
+*::before {
+    block-size: inherit;
 }
