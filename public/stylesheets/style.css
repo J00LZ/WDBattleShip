@@ -88,6 +88,7 @@ h6 {
 .textbox {
     font-family: "Roboto", sans-serif;
     font-size: 16px;
+    padding: 5px;
 }
 
 .column {
@@ -111,6 +112,11 @@ h6 {
     width: 90%;
     height: 50%;
     top: 50%;
+}
+
+.label{
+  font-size: 18px;
+  font-weight: 400;
 }
 
 /* Colors */
