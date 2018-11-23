@@ -15,7 +15,12 @@ $(document).on('click', '#submit-game-form', function(event){
 
     if (nickname.trim() !== ""){
         console.log("Verifying name '" + nickname + "' & code '" + code + "'");
-        verifyData(nickname, code);
+
+        if (nickname.includes("&")){
+            displayError("Nickname cannot contain '&'")
+        } else {
+            verifyData(nickname, code);
+        }
     } else {
         displayError("Nickname cannot be empty!");
     }
@@ -26,7 +31,7 @@ $(document).ready(function(){
     let url = new URL(window.location.href);
     let error = url.searchParams.get("error");
 
-    if (error.trim() !== "" && error !== null && error !== undefined){
+    if (error !== null && error !== undefined && error.trim() !== "") {
         //TODO: Implement error messages. For now just a simple echo
         displayError(error);
     }

@@ -31,7 +31,7 @@ function processEvent(message){
     console.log("Response:" + message.data);
 
     //TODO: Implement packet handling
-    //TODO: Implement soemthing to return to home page incase something failed
+    //TODO: Implement something to return to home page incase something failed
 }
 
 
