@@ -21,6 +21,58 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
+// Game manager
+var GameManager = require('../server/gamemanager');
+var Player = require('../server/player');
+var gameManager = new GameManager();
+
+// WebSocket
+var websocket = require('ws');
+const wsServer = new websocket.Server({server});
+
+wsServer.on("connection", function(socket, request){
+  console.log("Incoming connection from: " + request.connection.remoteAddress);
+  gameManager.addPlayer(new Player(socket), request.connection.remoteAddress);
+
+  socket.on("message", function(message){
+      console.log("Message (" + request.connection.remoteAddress + "): " + message)
+
+      // Check if it's a special request
+      if (message.startsWith("verify-name:")){
+        let name = message.split(":")[1];
+        let response = "verify-name-rsp:";
+
+        if (gameManager.nameAvailable(name)){
+          response += "TRUE";
+        } else {
+          response += "FALSE";
+        }
+
+        socket.send(response);
+      } else if (message.startsWith("verify-invite:")){
+        let code = message.split(":")[1];
+        let response = "verify-invite-rsp:";
+
+        if (gameManager.validInviteCode(code)){
+          response += "TRUE";
+        } else {
+          response += "FALSE";
+        }
+
+        socket.send(response);
+      } else {
+        // Not special, let the game manager handle it
+        gameManager.handleRequest(socket, message);
+      }
+  });
+
+  socket.on("close", function(){
+    console.log("Closed connection from: " + request.connection.remoteAddress);
+    gameManager.removePlayer(socket);
+  });
+});
+
+
 /**
  * Listen on provided port, on all network interfaces.
  */
