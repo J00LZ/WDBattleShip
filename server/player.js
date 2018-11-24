@@ -36,6 +36,14 @@ function Player(socket){
     this.getKey = function(){
         return this.key;
     }
+
+    /*
+    Disconnects a player with the given error message
+    */
+    this.kick = function(message){
+        socket.send("KICK=" + message)
+        socket.close();
+    }
 }
 
 module.exports = Player;

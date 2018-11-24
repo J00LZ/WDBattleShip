@@ -12,17 +12,38 @@ $(document).on('click', '#submit-game-form', function(event){
 
     let nickname = data['nickname'].trim();
     let code = data['code'].trim();
+    let illegalChars = ['&', '/', '=', ':'];
+    let validInput = true;
 
-    if (nickname.trim() !== ""){
-        console.log("Verifying name '" + nickname + "' & code '" + code + "'");
+    // Check nickname
+    let i = nickname.length;
+    while (i-- && validInput){
+        let char = nickname.charAt(i);
 
-        if (nickname.includes("&")){
-            displayError("Nickname cannot contain '&'")
-        } else {
-            verifyData(nickname, code);
+        if (illegalChars.includes(char)){
+            displayError(Messages.INVALID_CHAR.replace("%char%", char).replace("%target%", "name"));
+            validInput = false;
         }
-    } else {
-        displayError("Nickname cannot be empty!");
+    }
+
+
+    // Check code
+    let pattern = new RegExp("^[0-9|a-z]{5}$"); // exactly five 5 digits or letters
+    let regTest = pattern.test(code);
+
+    // Check if regex failed and there was some input
+    if (!regTest && code.trim() !== ""){
+        displayError(Messages.ILLEGAL_INVITE);
+        validInput = false;
+    }
+
+    if (validInput){
+        if (nickname.trim() !== ""){
+            console.log("Verifying name '" + nickname + "' & code '" + code + "'");
+            verifyData(nickname, code);
+        } else {
+            displayError(Messages.NICK_EMPTY);
+        }
     }
 });
 
@@ -32,8 +53,14 @@ $(document).ready(function(){
     let error = url.searchParams.get("error");
 
     if (error !== null && error !== undefined && error.trim() !== "") {
-        //TODO: Implement error messages. For now just a simple echo
-        displayError(error);
+        //TODO: Maybe add something to fancify these messages a bit
+        let errorMessage = Messages[error];
+
+        if (errorMessage !== "undefined" && errorMessage !== undefined && errorMessage !== null){
+            displayError(errorMessage);
+        } else {
+            console.error("Recieved invalid error code: " + error);
+        }
     }
 });
 
@@ -76,7 +103,7 @@ function verifyData(nickname, code){
                     socket.send("verify-invite:" + code);
                 } else {
                     // Name not available, notify user
-                    displayError("That name is currently already in use!");
+                    displayError(Messages.NICK_TAKEN);
                 }
                 break;
             case "verify-invite-rsp":
@@ -85,8 +112,11 @@ function verifyData(nickname, code){
                     submitForm();
                 } else {
                     // Name not available, notify user
-                    displayError("Invalid invite code!");
+                    displayError(Messages.INVALID_INVITE);
                 }
+                break;
+            case "verify-err":
+                displayError(Messages[resp]);
                 break;
             default:
             // Ignore

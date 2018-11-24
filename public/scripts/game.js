@@ -18,9 +18,17 @@ socket.onopen = initConnection;
 socket.onmessage = processEvent;
 
 function initConnection(){
+    if (nickname === null || nickname === undefined || nickname.trim() === ""){
+        // If this fires the user probably went directly to the game page
+        // We don't want that to happen
+        socket.close();
+        location.href = '/?error=NICK_EMPTY';
+        return;
+    }
+
     let req = "NAME=" + nickname;
 
-    if (code !== ""){
+    if (code !== null && code !== undefined && code.trim() != ""){
         req += "&CODE=" + code;
     }
 
@@ -30,8 +38,31 @@ function initConnection(){
 function processEvent(message){
     console.log("Response:" + message.data);
 
+    let packets = message.data.split("&");
+
+    for (let i = 0; i < packets.length; i++){
+        let packetData = packets[i].split("=");
+
+        // Malformed packet, should not happen
+        if (packetData.length !== 2){
+            console.error("Received malformed packet from server: " + packetData);
+            continue;
+        }
+
+        let identifier = packetData[0];
+        let value = packetData[1];
+
+        switch (identifier){
+            case "KICK":
+                // Client was kicked, so redirect to home page and show error
+                location.href = '/?error=' + value;
+                break;
+            default:
+                console.error("Received unknown packet: " + identifier);
+        }
+    }
+
     //TODO: Implement packet handling
-    //TODO: Implement something to return to home page incase something failed
 }
 
 

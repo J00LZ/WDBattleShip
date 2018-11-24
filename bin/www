@@ -39,6 +39,12 @@ wsServer.on("connection", function(socket, request){
 
       // Check if it's a special request
       if (message.startsWith("verify-name:")){
+        if (message.split(":").length !== 2){
+          // Invalid packet
+          socket.send("verify-err:MALFORMED_PACKET");
+          return;
+        }
+
         let name = message.split(":")[1];
         let response = "verify-name-rsp:";
 
@@ -50,6 +56,12 @@ wsServer.on("connection", function(socket, request){
 
         socket.send(response);
       } else if (message.startsWith("verify-invite:")){
+        if (message.split(":").length !== 2){
+          // Invalid packet
+          socket.send("verify-err:MALFORMED_PACKET");
+          return;
+        }
+
         let code = message.split(":")[1];
         let response = "verify-invite-rsp:";
 

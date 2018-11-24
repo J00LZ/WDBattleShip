@@ -43,7 +43,7 @@ function GameManager(){
         {
             let player = this.players[i];
             
-            console.log("Comparing " + name + " to " + player.getName());
+            console.log("\t>Comparing " + name + " to " + player.getName());
 
             if (player.getName() === name){
                 return player;
@@ -115,6 +115,7 @@ function GameManager(){
                 continue;
             }
 
+            let player = this.getPlayerBySocket(socket);
             let id = ids[i].split("=")[0];
             let data = ids[i].split("=")[1];
             
@@ -123,17 +124,32 @@ function GameManager(){
             }
 
             switch (id){
-                case "NAME":
-                    let player = this.getPlayerBySocket(socket);
-    
+                case "NAME":   
                     if (this.getPlayerByName(data) !== null){
-                        //TODO: Implement something to cancel game here
+                        // Player is connected but name is in use
+                        this.removePlayer(socket);
+                        player.kick("NICK_TAKEN");
+                        return;
                     }
 
                     player.setName(data);
                     break;
                 case "CODE":
-                    //TODO: Implement connect to game here
+                    if (!new RegExp("^[0-9|a-z]{5}$").test(data)){
+                        // Player is connected but invite code is illegal
+                        this.removePlayer(socket);
+                        player.kick("ILLEGAL_INVITE");
+                        return;
+                    }
+
+                    if (!this.validInviteCode(data)){
+                        // Player is connected but invite code is invalid
+                        this.removePlayer(socket);
+                        player.kick("INVALID_INVITE");
+                        return;
+                    }
+
+                    //TODO: Implement game connecting
                     break;
             }
         }

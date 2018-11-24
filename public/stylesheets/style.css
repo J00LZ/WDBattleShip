@@ -119,6 +119,13 @@ h6 {
   font-weight: 400;
 }
 
+/* Julius pls fix */
+h4 > a {
+    color: inherit;
+    text-decoration: inherit;
+}
+
+
 /* Colors */
 
 .blue {
