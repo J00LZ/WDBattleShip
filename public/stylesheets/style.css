@@ -114,17 +114,31 @@ h6 {
     top: 50%;
 }
 
-.label{
-  font-size: 18px;
-  font-weight: 400;
+.label {
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.statStyle {
+    font-weight: bolder;
+}
+
+#stats {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.statHeader {
+    margin-top: 20px;
 }
 
 /* Julius pls fix */
-#menu > a {
+
+#menu>a {
     color: inherit;
     text-decoration: inherit;
 }
-
 
 /* Colors */
 

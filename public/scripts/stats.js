@@ -62,11 +62,15 @@ function processStats(message){
 }
 
 function updateStats(){
-    $("#stats").find("p").each(function(){
-        let statID = $(this).attr("id");
+    // $("#stats").find("p").each(function(){
+    //     let statID = $(this).attr("id");
 
-        $(this).find("em").text(window[statID]);
-    });
+    //     $(this).find("span").text(window[statID]);
+    // });
+    $("#stats").find("span").each(function(){
+        let statID = $(this).attr("id");
+        $(this).text(window[statID]);
+    })
 
     if (lastUpdate >= 4){
         // No update for 5 seconds, server is not responding/dead
