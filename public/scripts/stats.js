@@ -86,7 +86,11 @@ $(document).ready(function(){
     // Repeat
     setInterval(function(){
         sendStatRequest();
-        updateStats();
+
+        // Creating a small gap for the stats to be returned by the server
+        setTimeout(function(){
+            updateStats();
+        }, 500);
         lastUpdate += 1;
     }, updateTime);  
 });

@@ -132,6 +132,24 @@ function GameManager(){
                         return;
                     }
 
+                    let illegalChars = ['&', '/', '=', ':'];
+
+                    // Check nickname
+                    let i = data.length;
+                    while (i--){
+                        let char = data.charAt(i);
+
+                        if (illegalChars.includes(char)){
+                            this.removePlayer(socket);
+
+                            // On the client side we would normally send a more fitting error message
+                            // However, it would cost more code to send a formatted string, so we'll just send a more general error code
+                            player.kick("NICK_TAKEN");
+
+                            return;
+                        }
+                    }
+
                     player.setName(data);
                     break;
                 case "CODE": // Player is requesting to join the game with the given code
