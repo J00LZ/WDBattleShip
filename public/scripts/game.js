@@ -17,6 +17,9 @@ console.log("Working with name '" + nickname + "' and code '" + code + "'");
 socket.onopen = initConnection;
 socket.onmessage = processEvent;
 
+/*
+Starts connection to game manager
+*/
 function initConnection(){
     if (nickname === null || nickname === undefined || nickname.trim() === ""){
         // If this fires the user probably went directly to the game page
@@ -35,6 +38,9 @@ function initConnection(){
     socket.send(req);
 }
 
+/*
+Handles incoming packets
+*/
 function processEvent(message){
     console.log("Response:" + message.data);
 

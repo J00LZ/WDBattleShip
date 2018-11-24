@@ -124,7 +124,7 @@ function GameManager(){
             }
 
             switch (id){
-                case "NAME":   
+                case "NAME": // Player is requesting a name 
                     if (this.getPlayerByName(data) !== null){
                         // Player is connected but name is in use
                         this.removePlayer(socket);
@@ -134,7 +134,7 @@ function GameManager(){
 
                     player.setName(data);
                     break;
-                case "CODE":
+                case "CODE": // Player is requesting to join the game with the given code
                     if (!new RegExp("^[0-9|a-z]{5}$").test(data)){
                         // Player is connected but invite code is illegal
                         this.removePlayer(socket);
@@ -150,6 +150,27 @@ function GameManager(){
                     }
 
                     //TODO: Implement game connecting
+                    break;
+                case "STATS": // Player is requesting stats
+                    switch (data){
+                        case "PLAYERS_ONLINE":
+                            socket.send(data + "=" + this.players.length);
+                            break;
+                        case "GAMES_IN_PROGRESS":
+                            socket.send(data + "=" + this.games.length);
+                            break;
+                        case "GAMES_PLAYED_TODAY":
+                            //TODO: Implement
+                            socket.send(data + "=0");
+                            break;
+                        case "GAMES_PLAYED_TOTAL":
+                            //TODO: Implement
+                            socket.send(data + "=0");
+                            break;
+                        default:
+                            // Oof
+                            break;
+                    }
                     break;
             }
         }
