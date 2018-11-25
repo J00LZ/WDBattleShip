@@ -1,8 +1,22 @@
+var Game = require("../server/game");
+
 function GameManager(){
     this.games = [];
     this.players = [];
 
-    this.createGame = function(player){
+    this.joinGame = function(player, inviteCode){
+        let game = null;
+
+        // Check if player wants to join a game by invite code
+        if (inviteCode === null){
+            game = this.getGameByInviteCode(inviteCode);
+
+            // Invalid invite code
+            if (game === null){
+                this.removePlayer(player.getSocket());
+                player.kick("INVALID_INVITE");
+            }
+        }
         let key = createGameKey();
         
         // Make sure the chosen key is not yet used (most likely)
@@ -11,13 +25,28 @@ function GameManager(){
 
             if (this.getGameByKey(key) === null){
                 console.log("Creating new game with key: " + key);
-                this.games.push(new Game(player, key));
+                this.games.push(new Game(player, key, false));
                 break;
             }
 
             console.log(key + " is already in use. Trying again.");
         }
         
+    }
+
+    this.getFirstGameInQueue = function()
+    {
+        for (let i = 0; i < this.games.length; i++)
+        {
+            let game = this.games[i];
+
+            // Check if game is in need of a second player
+            if (game.isPublic() && game.getSecondPlayer() === null){
+                return game;
+            }
+        }
+
+        return null;
     }
 
     /*
@@ -89,11 +118,7 @@ function GameManager(){
     True if so, false if taken
     */
     this.nameAvailable = function(name){
-        if (this.getPlayerByName(name) === null){
-            return true;
-        }
-
-        return false;
+        return this.getPlayerByName(name) === null;
     }
 
     /*
@@ -167,7 +192,21 @@ function GameManager(){
                         return;
                     }
 
-                    //TODO: Implement game connecting
+                    // Set the invite key of the player
+                    player.setInviteKey(data);
+
+                    break;
+                case "REQUESTGAME": // Player wants to join/create game
+                    if (player.getName() === null || player.getName() == undefined || player.getName()){
+                        // Player wants to join game but name has not been set: wrong order of packets
+                        this.removePlayer(socket);
+                        player.kick("ILLEGAL_PACKET");
+                        return;
+                    }
+
+                    // Join game
+                    this.joinGame(player, player.getInviteCode());
+
                     break;
                 case "STATS": // Player is requesting stats
                     switch (data){
@@ -209,20 +248,27 @@ function GameManager(){
     }
 
     /*
+    Returns game with given invite code, if any
+    */
+    this.getGameByInviteCode = function(inviteCode){
+        for (let i = 0; i < this.games.length; i++){
+            let game = this.games[i];
+            let inviteCode = game.getInviteCode();
+ 
+            if (code === inviteCode)
+            {
+                return game;
+            }
+        }
+
+        return null;
+    }
+
+    /*
     Checks if the given invite code is valid
     */
    this.validInviteCode = function validInviteCode(code){
-       for (let i = 0; i < this.games.length; i++){
-           let game = this.games[i];
-           let inviteCode = game.getInviteCode();
-
-           if (code === inviteCode)
-           {
-               return true;
-           }
-       }
-
-       return false;
+       return this.getGameByInviteCode(code) !== null;
    }
 }
 

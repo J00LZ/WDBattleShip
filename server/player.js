@@ -1,5 +1,8 @@
 function Player(socket){
     this.socket = socket;
+    this.inviteKey = null;
+    this.gameKey = null;
+
     //TODO: Add some sort of game board + functions
 
     /*
@@ -26,16 +29,30 @@ function Player(socket){
     /*
     Sets the game key of this player to the given key
     */
-    this.setKey = function(key){
-        this.key = key;
+    this.setKey = function(gameKey){
+        this.gameKey = gameKey;
     }
 
     /*
     Returns the key of the game the player is participating in
     */
     this.getKey = function(){
-        return this.key;
+        return this.gameKey;
     }
+
+    /*
+    Sets the invite code of this player
+    */
+    this.setInviteCode = function(inviteKey){
+        this.inviteKey = inviteKey;
+    }
+
+    /*
+    Gets the invite key of this player
+    */
+   this.getInviteCode = function(){
+       return this.inviteKey;
+   }
 
     /*
     Disconnects a player with the given error message

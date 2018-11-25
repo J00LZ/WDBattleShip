@@ -3,6 +3,7 @@ function Game(firstPlayer, key, public){
     this.key = key;
     this.invite = key.substring(0, 5);
     this.firstPlayer = firstPlayer;
+    this.secondPlayer = null;
     //TODO: Add game state + functions
 
     /*

@@ -35,7 +35,7 @@ function initConnection(){
         req += "&CODE=" + code;
     }
 
-    socket.send(req);
+    socket.send(req + "&REQUESTGAME=TRUE");
 }
 
 /*
