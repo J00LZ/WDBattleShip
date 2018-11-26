@@ -1,5 +1,7 @@
-var socket = new WebSocket("ws://localhost:3000");
-
+var socket = new WebSocket("ws://localhost:3000/ws");
+socket.onclose = function(s){
+    console.log("Shuting down ws!");
+}
 socket.onopen = sendStatRequest;
 socket.onmessage = processStats;
 
