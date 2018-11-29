@@ -1,9 +1,9 @@
-var socket = new WebSocket("ws://localhost:3000/ws");
-socket.onclose = function(s){
+var statsock = new WebSocket("ws://localhost:3000/ws");
+statsock.onclose = function(s){
     console.log("Shuting down ws!");
 }
-socket.onopen = sendStatRequest;
-socket.onmessage = processStats;
+statsock.onopen = sendStatRequest;
+statsock.onmessage = processStats;
 
 var stat_playersOnline = 1;
 var stat_GamesInProgress = 0;
@@ -17,8 +17,8 @@ var updateTime = 5 * 1000;
 Sends the request for all stats
 */
 function sendStatRequest(){
-    if (socket.readyState === socket.OPEN){
-        socket.send("STATS=PLAYERS_ONLINE&STATS=GAMES_IN_PROGRESS&STATS=GAMES_PLAYED_TODAY&STATS=GAMES_PLAYED_TOTAL");
+    if (statsock.readyState === statsock.OPEN){
+        statsock.send("STATS=PLAYERS_ONLINE&STATS=GAMES_IN_PROGRESS&STATS=GAMES_PLAYED_TODAY&STATS=GAMES_PLAYED_TOTAL");
     }
 }
 
@@ -78,7 +78,7 @@ function updateStats(){
         // No update for 5 seconds, server is not responding/dead
         if (!$("#error-msg").length)
         {
-            $("div #error-box").append('<p id="error-msg" style="color: red" hidden>Warning: Stats are no longer live, server has stopped responding! Try reloading the page</p>');
+            $("div #error-box-stats").append('<p id="error-msg" style="color: red" hidden>Warning: Stats are no longer live, server has stopped responding! Try reloading the page</p>');
             $("#error-msg").fadeIn(300);
         }
     }

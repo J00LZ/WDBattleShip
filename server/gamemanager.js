@@ -1,29 +1,29 @@
 var Game = require("../server/game");
 
-function GameManager(){
+function GameManager() {
     this.games = [];
     this.players = [];
 
-    this.joinGame = function(player, inviteCode){
+    this.joinGame = function (player, inviteCode) {
         let game = null;
 
         // Check if player wants to join a game by invite code
-        if (inviteCode === null){
+        if (inviteCode === null) {
             game = this.getGameByInviteCode(inviteCode);
 
             // Invalid invite code
-            if (game === null){
+            if (game === null) {
                 this.removePlayer(player.getSocket());
                 player.kick("INVALID_INVITE");
             }
         }
         let key = createGameKey();
-        
+
         // Make sure the chosen key is not yet used (most likely)
-        while (true){
+        while (true) {
             console.log("Checking key: " + key);
 
-            if (this.getGameByKey(key) === null){
+            if (this.getGameByKey(key) === null) {
                 console.log("Creating new game with key: " + key);
                 this.games.push(new Game(player, key, false));
                 break;
@@ -31,17 +31,15 @@ function GameManager(){
 
             console.log(key + " is already in use. Trying again.");
         }
-        
+
     }
 
-    this.getFirstGameInQueue = function()
-    {
-        for (let i = 0; i < this.games.length; i++)
-        {
+    this.getFirstGameInQueue = function () {
+        for (let i = 0; i < this.games.length; i++) {
             let game = this.games[i];
 
             // Check if game is in need of a second player
-            if (game.isPublic() && game.getSecondPlayer() === null){
+            if (game.isPublic() && game.getSecondPlayer() === null) {
                 return game;
             }
         }
@@ -52,11 +50,11 @@ function GameManager(){
     /*
     Returns the game using the given key, if any
     */
-    this.getGameByKey = function(key){
-        for (let i = 0; i < this.games.length; i++){
+    this.getGameByKey = function (key) {
+        for (let i = 0; i < this.games.length; i++) {
             let game = this.games[i];
 
-            if (game.getKey() === key){
+            if (game.getKey() === key) {
                 return game;
             }
         }
@@ -67,14 +65,13 @@ function GameManager(){
     /*
     Returns the player using the given name, if any
     */
-    this.getPlayerByName = function(name){
-        for (let i = 0; i < this.players.length; i++)
-        {
+    this.getPlayerByName = function (name) {
+        for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
-            
+
             console.log("\t>Comparing " + name + " to " + player.getName());
 
-            if (player.getName() === name){
+            if (player.getName() === name) {
                 return player;
             }
         }
@@ -85,24 +82,24 @@ function GameManager(){
     /*
     Returns the player using the given socket, if any
     */
-   this.getPlayerBySocket = function(socket){
-       for (let i = 0; i < this.players.length; i++){
-           let player = this.players[i];
-
-           if (player.getSocket() === socket){
-               return player;
-           }
-       }
-   }
-
-   /*
-   Removes player from list
-   */
-   this.removePlayer = function(socket){
-        for (let i = 0; i < this.players.length; i++){
+    this.getPlayerBySocket = function (socket) {
+        for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
 
-            if (player.getSocket() === socket){
+            if (player.getSocket() === socket) {
+                return player;
+            }
+        }
+    }
+
+    /*
+    Removes player from list
+    */
+    this.removePlayer = function (socket) {
+        for (let i = 0; i < this.players.length; i++) {
+            let player = this.players[i];
+
+            if (player.getSocket() === socket) {
                 let gameKey = player.getKey();
 
                 //TODO: End game if not yet finished
@@ -111,20 +108,20 @@ function GameManager(){
                 this.players.splice(i, 1);
             }
         }
-   }
+    }
 
     /*
     Checks if a given name is still available
     True if so, false if taken
     */
-    this.nameAvailable = function(name){
+    this.nameAvailable = function (name) {
         return this.getPlayerByName(name) === null;
     }
 
     /*
     Adds the given player to the player list
     */
-    this.addPlayer = function(player, addr){
+    this.addPlayer = function (player, addr) {
         console.log("Adding player object (" + addr + ")");
         this.players.push(player);
     }
@@ -132,25 +129,25 @@ function GameManager(){
     /*
     Handles requests from clients
     */
-    this.handleRequest = function handleRequest(socket, message){
+    this.handleRequest = function handleRequest(socket, message) {
         let ids = message.split("&");
 
-        for (let i = 0; i < ids.length; i++){
-            if (ids[i].split("=").length !== 2){
+        for (let i = 0; i < ids.length; i++) {
+            if (ids[i].split("=").length !== 2) {
                 continue;
             }
 
             let player = this.getPlayerBySocket(socket);
             let id = ids[i].split("=")[0];
             let data = ids[i].split("=")[1];
-            
-            if (data.trim() === ""){
+
+            if (data.trim() === "") {
                 continue;
             }
 
-            switch (id){
+            switch (id) {
                 case "NAME": // Player is requesting a name 
-                    if (this.getPlayerByName(data) !== null){
+                    if (this.getPlayerByName(data) !== null) {
                         // Player is connected but name is in use
                         this.removePlayer(socket);
                         player.kick("NICK_TAKEN");
@@ -161,10 +158,10 @@ function GameManager(){
 
                     // Check nickname
                     let i = data.length;
-                    while (i--){
+                    while (i--) {
                         let char = data.charAt(i);
 
-                        if (illegalChars.includes(char)){
+                        if (illegalChars.includes(char)) {
                             this.removePlayer(socket);
 
                             // On the client side we would normally send a more fitting error message
@@ -178,14 +175,14 @@ function GameManager(){
                     player.setName(data);
                     break;
                 case "CODE": // Player is requesting to join the game with the given code
-                    if (!new RegExp("^[0-9|a-z]{5}$").test(data)){
+                    if (!new RegExp("^[0-9|a-z]{5}$").test(data)) {
                         // Player is connected but invite code is illegal
                         this.removePlayer(socket);
                         player.kick("ILLEGAL_INVITE");
                         return;
                     }
 
-                    if (!this.validInviteCode(data)){
+                    if (!this.validInviteCode(data)) {
                         // Player is connected but invite code is invalid
                         this.removePlayer(socket);
                         player.kick("INVALID_INVITE");
@@ -197,7 +194,7 @@ function GameManager(){
 
                     break;
                 case "REQUESTGAME": // Player wants to join/create game
-                    if (player.getName() === null || player.getName() == undefined || player.getName()){
+                    if (player.getName() === null || player.getName() == undefined || player.getName()) {
                         // Player wants to join game but name has not been set: wrong order of packets
                         this.removePlayer(socket);
                         player.kick("ILLEGAL_PACKET");
@@ -209,9 +206,15 @@ function GameManager(){
 
                     break;
                 case "STATS": // Player is requesting stats
-                    switch (data){
+                    switch (data) {
                         case "PLAYERS_ONLINE":
-                            socket.send(data + "=" + this.players.length);
+                            var pcounter = 0;
+                            this.players.forEach(element => {
+                                if (element.getName() !== null && element.getName() !== undefined) {
+                                    pcounter++;
+                                }
+                            });
+                            socket.send(data + "=" + pcounter);
                             break;
                         case "GAMES_IN_PROGRESS":
                             socket.send(data + "=" + this.games.length);
@@ -239,24 +242,23 @@ function GameManager(){
     this.createGameKey = function createGameKey() {
         var key = "";
         var possible = "abcdefghijklmnopqrstuvwxyz0123456789";
-    
-        for (var i = 0; i < 12; i++){
+
+        for (var i = 0; i < 12; i++) {
             key += possible.charAt(Math.floor(Math.random() * possible.length));
         }
-    
+
         return key;
     }
 
     /*
     Returns game with given invite code, if any
     */
-    this.getGameByInviteCode = function(inviteCode){
-        for (let i = 0; i < this.games.length; i++){
+    this.getGameByInviteCode = function (inviteCode) {
+        for (let i = 0; i < this.games.length; i++) {
             let game = this.games[i];
             let inviteCode = game.getInviteCode();
- 
-            if (code === inviteCode)
-            {
+
+            if (code === inviteCode) {
                 return game;
             }
         }
@@ -267,9 +269,9 @@ function GameManager(){
     /*
     Checks if the given invite code is valid
     */
-   this.validInviteCode = function validInviteCode(code){
-       return this.getGameByInviteCode(code) !== null;
-   }
+    this.validInviteCode = function validInviteCode(code) {
+        return this.getGameByInviteCode(code) !== null;
+    }
 }
 
 module.exports = GameManager;

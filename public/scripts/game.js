@@ -5,12 +5,13 @@ let jCanvas = $('#gameCanvas');
 let canvas = jCanvas[0];
 
 // Form data
-let url = new URL(window.location.href);
-let nickname = url.searchParams.get("nickname");
-let code = url.searchParams.get("code");
+// let url = new URL(window.location.href);
+// let nickname = url.searchParams.get("nickname");
+// let code = url.searchParams.get("code");
+// console.log(a);
 
-//bod.css("background-color", "rgb(180, 180, 180)");
-//jCanvas.css("background-color", "rgb(0, 0, 0)");
+bod.css("background-color", "rgb(180, 180, 180)");
+jCanvas.css("background-color", "rgb(0, 0, 0)");
 
 console.log("Working with name '" + nickname + "' and code '" + code + "'");
 
@@ -20,8 +21,8 @@ socket.onmessage = processEvent;
 /*
 Starts connection to game manager
 */
-function initConnection(){
-    if (nickname === null || nickname === undefined || nickname.trim() === ""){
+function initConnection() {
+    if (nickname === null || nickname === undefined || nickname.trim() === "") {
         // If this fires the user probably went directly to the game page
         // We don't want that to happen
         socket.close();
@@ -31,26 +32,26 @@ function initConnection(){
 
     let req = "NAME=" + nickname;
 
-    if (code !== null && code !== undefined && code.trim() != ""){
+    if (code !== null && code !== undefined && code.trim() != "") {
         req += "&CODE=" + code;
     }
 
-    socket.send(req + "&REQUESTGAME=TRUE");
+    socket.send(req)// + "&REQUESTGAME=TRUE");
 }
 
 /*
 Handles incoming packets
 */
-function processEvent(message){
+function processEvent(message) {
     console.log("Response:" + message.data);
 
     let packets = message.data.split("&");
 
-    for (let i = 0; i < packets.length; i++){
+    for (let i = 0; i < packets.length; i++) {
         let packetData = packets[i].split("=");
 
         // Malformed packet, should not happen
-        if (packetData.length !== 2){
+        if (packetData.length !== 2) {
             console.error("Received malformed packet from server: " + packetData);
             continue;
         }
@@ -58,7 +59,7 @@ function processEvent(message){
         let identifier = packetData[0];
         let value = packetData[1];
 
-        switch (identifier){
+        switch (identifier) {
             case "KICK":
                 // Client was kicked, so redirect to home page and show error
                 location.href = '/?error=' + value;

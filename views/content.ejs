@@ -1,7 +1,7 @@
 <div class="column left centered">
     <h1>Play anonymously</h1>
     <div id="error-box"></div>
-    <form id="play-form" action="/game" method="GET">
+    <form id="play-form" action="/game" method="POST">
         <div class="align-right">
             <label for="nickname" class="label">Nickname: </label>&nbsp;<input type="text" name="nickname" class="textbox" required style="margin-bottom: 5px;"><br>
             <label for="code" class="label">Join code: </label>&nbsp;<input type="text" name="code" class="textbox" placeholder="optional"><br>
@@ -18,6 +18,8 @@
     <h1>How does this game work?</h1>
     <p>It has revitalising gameplay consisting of clicking the battlefield, placing boats and exploding bombs!</p>
     <p>there will be more stuff here eventually, but not for now :p</p>
+    <h2>Stats</h2>
+    <%- include('stats') %>
 </div>
 
 <script src="scripts/verifyform.js"></script>
