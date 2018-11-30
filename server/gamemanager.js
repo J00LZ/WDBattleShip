@@ -71,7 +71,7 @@ function GameManager() {
     /*
     Handles game joining
     */
-    this.joinGame = function(player, inviteCode){
+    this.joinGame = function(player, inviteCode, private){
         let game = null;
 
         // Check if player wants to join a game by invite code
@@ -80,38 +80,46 @@ function GameManager() {
 
             // Invalid invite code
             if (game === null){
-                console.log("Kicking player " + player.getName() + " because he/she supplied an invalid invite code!");
-                this.removePlayer(player.getSocket());
-                player.kick("INVALID_INVITE");
+                player.kick("INVALID_INVITE", "supplied an invalid invite code!");
+
+                return;
+            }
+
+            // Game is full
+            if (game.getSecondPlayer() !== null) {
+                player.kick("GAME_FULL", "tried to join a full game!");
+                return;
             }
 
             // Add player to game
             game.setSecondPlayer(player);
             player.setKey(game.getKey());
-
+            
             console.log("Player '" + player.getName() + "' joined the game with invite code '" + inviteCode + "'");
             this.startGame(game);
+        } else {
+            game = this.getFirstGameInQueue();
 
-            return;
+            if (private || game === null){
+                // No games waiting for players, creating one
+                let key = this.createGameKey(); // Unique key
+                game = new Game(player, key, !private);
+
+                console.log("Creating new " + (private ? "private" : "public") + " game with key '" + key + "' and player '" + player.getName() + "'");
+                this.games.push(game);
+                player.setKey(key);
+            } else {
+                // Found a game to join
+                game.setSecondPlayer(player);
+                player.setKey(game.getKey());
+    
+                console.log("Player '" + player.getName() + "' joined the game with key '" + game.getKey() + "'");
+                this.startGame(game);
+            }   
         }
 
-        let firstAvailableGame = this.getFirstGameInQueue();
-
-        if (firstAvailableGame === null){
-            // No games waiting for players, creating one
-            let key = this.createGameKey(); // Unique key
-
-            console.log("Creating new game with key '" + key + "' and player '" + player.getName() + "'");
-            this.games.push(new Game(player, key, true));
-            player.setKey(key);
-        } else {
-            // Found a game to join
-            firstAvailableGame.setSecondPlayer(player);
-            player.setKey(firstAvailableGame.getKey());
-
-            console.log("Player '" + player.getName() + "' joined the game with key '" + firstAvailableGame.getKey() + "'");
-            this.startGame(firstAvailableGame);
-        }       
+        // Notify client of game key
+        this.sendSavePacket(player, "GAME_KEY=" + game.getKey());
     }
 
     /*
@@ -152,7 +160,7 @@ function GameManager() {
         for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
 
-            console.log("\t>Comparing " + name + " to " + player.getName());
+            console.log("   > Comparing " + name + " to " + player.getName());
 
             if (player.getName() === name) {
                 return player;
@@ -231,14 +239,14 @@ function GameManager() {
 
             // Check if the packet contained data
             if (data.trim() === "") {
+                console.warn("Received empty packet from " + player.getName() + ": " + id);
                 continue;
             }
 
             // Check if we can pass this to another method
             if (id.startsWith("GAME_CS_")) {
                 if (id.split("_CS_").length !== 2) {
-                    this.removePlayer(socket);
-                    player.kick("MALFORMED_PACKET");
+                    player.kick("MALFORMED_PACKET", "sent a malformed packet!");
 
                     return;
                 }
@@ -254,7 +262,6 @@ function GameManager() {
                 case "NAME": // Player is requesting a name 
                     if (this.getPlayerByName(data) !== null) {
                         // Player is connected but name is in use
-                        this.removePlayer(socket);
                         player.kick("NICK_TAKEN");
                         return;
                     }
@@ -267,30 +274,27 @@ function GameManager() {
                         let char = data.charAt(i);
 
                         if (illegalChars.includes(char)) {
-                            this.removePlayer(socket);
-
                             // On the client side we would normally send a more fitting error message
                             // However, it would cost more code to send a formatted string, so we'll just send a more general error code
-                            player.kick("NICK_TAKEN");
+                            player.kick("NICK_TAKEN", "tried to use an illegal nickname!");
 
                             return;
                         }
                     }
 
                     player.setName(data);
+                    console.log("Set name of new player to " + data);
                     break;
                 case "CODE": // Player is requesting to join the game with the given code
                     if (!new RegExp("^[0-9|a-z]{5}$").test(data)) {
-                        // Player is connected but invite code is illegal
-                        this.removePlayer(socket);
-                        player.kick("ILLEGAL_INVITE");
+                        // Player is connected but invite code is illegal (invalid characters/length)
+                        player.kick("ILLEGAL_INVITE", "supplied an illegal invite code!");
                         return;
                     }
 
                     if (!this.validInviteCode(data)) {
                         // Player is connected but invite code is invalid
-                        this.removePlayer(socket);
-                        player.kick("INVALID_INVITE");
+                        player.kick("INVALID_INVITE", "supplied an invalid invite code!");
                         return;
                     }
 
@@ -301,13 +305,12 @@ function GameManager() {
                 case "REQUESTGAME": // Player wants to join/create game
                     if (player.getName() === null || player.getName() == undefined || player.getName().trim() === "") {
                         // Player wants to join game but name has not been set: wrong order of packets
-                        this.removePlayer(socket);
-                        player.kick("ILLEGAL_PACKET");
+                        player.kick("ILLEGAL_PACKET", "sent an illegal packet!");
                         return;
                     }
-
+                    
                     // Join game
-                    this.joinGame(player, player.getInviteCode());
+                    this.joinGame(player, player.getInviteCode(), data === "on");
 
                     break;
                 case "STATS": // Player is requesting stats
@@ -360,8 +363,7 @@ function GameManager() {
                 break;
             default:
                 // Client sent an illegal game packet
-                this.removePlayer(socket);
-                player.kick("ILLEGAL_PACKET");
+                player.kick("ILLEGAL_PACKET", "sent an illegal game packet");
 
                 break;;
         }

@@ -3,6 +3,8 @@ var socket = new WebSocket("ws://localhost:3000/ws/");
 let bod = $('body');
 let jCanvas = $('#gameCanvas');
 let canvas = jCanvas[0];
+let key = null;
+let inviteCode = null;
 
 // Form data
 // let url = new URL(window.location.href);
@@ -17,6 +19,11 @@ console.log("Working with name '" + nickname + "' and code '" + code + "'");
 
 socket.onopen = initConnection;
 socket.onmessage = processEvent;
+socket.onclose = function() {
+    console.error("Lost connection to server");
+
+    // TODO: Css popup or something?
+}
 
 /*
 Starts connection to game manager
@@ -36,7 +43,7 @@ function initConnection() {
         req += "&CODE=" + code;
     }
 
-    socket.send(req + "&REQUESTGAME=TRUE");
+    socket.send(req + "&REQUESTGAME=" + private);
 }
 
 /*
@@ -79,6 +86,12 @@ function processEvent(message) {
                 // Opponent was found, game is started
                 console.log("Start game with opponent '" + value + "'");
                 //TODO: Render things and start some listeners or something
+                break;
+            case "GAME_KEY":
+                key = value;
+                inviteCode = value.substring(0, 5);
+
+                console.log("Received game key (" + key + ") and invite code (" + inviteCode + ")");
                 break;
             default:
                 console.error("Received unknown packet: " + identifier);

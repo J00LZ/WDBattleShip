@@ -6,7 +6,9 @@ router.post('/', function (req, res, next) {
     console.log(req.body);
     var nick = req.body.nickname;
     var code = req.body.code;
-    res.render('index', { title: 'Battleship | Game', content: 'game.ejs', name:nick, c:code});
+    var private = req.body.private;
+
+    res.render('index', { title: 'Battleship | Game', content: 'game.ejs', name:nick, c:code, priv:private});
 });
 
 module.exports = router;
