@@ -58,6 +58,9 @@ $(document).ready(function(){
 
         if (errorMessage !== "undefined" && errorMessage !== undefined && errorMessage !== null){
             displayError(errorMessage);
+
+            // Quick fix to only show error messages once, doesn't look pretty. Maybe replace all error messages by a css popup?
+            window.history.pushState({}, document.title, "/");
         } else {
             console.error("Recieved invalid error code: " + error);
         }

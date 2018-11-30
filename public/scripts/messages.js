@@ -10,6 +10,7 @@
     // Messages related to game
     exports.ABORTED_LEFT = "Your opponent left the game";
     exports.ABORTED_ILLEGAL = "Your client made an illegal move!";
+    exports.ABORTED_FORFEIT = "Your opponent forfeited the game!";
 
     // General messages
     exports.MALFORMED_PACKET = "Your client sent a malformed packet!";

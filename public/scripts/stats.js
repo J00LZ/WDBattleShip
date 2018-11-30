@@ -1,11 +1,11 @@
 var statsock = new WebSocket("ws://localhost:3000/ws");
 statsock.onclose = function(s){
-    console.log("Shuting down ws!");
+    console.log("Shutting down ws!");
 }
 statsock.onopen = sendStatRequest;
 statsock.onmessage = processStats;
 
-var stat_playersOnline = 1;
+var stat_playersOnline = 0;
 var stat_GamesInProgress = 0;
 var stat_GamesPlayedToday = 0;
 var stat_GamesPlayedTotal = 0;

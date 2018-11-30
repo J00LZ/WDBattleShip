@@ -36,14 +36,14 @@ function initConnection() {
         req += "&CODE=" + code;
     }
 
-    socket.send(req)// + "&REQUESTGAME=TRUE");
+    socket.send(req + "&REQUESTGAME=TRUE");
 }
 
 /*
 Handles incoming packets
 */
 function processEvent(message) {
-    console.log("Response:" + message.data);
+    console.log("Response: " + message.data);
 
     let packets = message.data.split("&");
 
@@ -59,10 +59,26 @@ function processEvent(message) {
         let identifier = packetData[0];
         let value = packetData[1];
 
+        // Let a seperate method handle game-related packets
+        if (identifier.startsWith("GAME_SC_")) {
+            identifier = identifier.split("_SC_")[1];
+
+            // i dunno, add an illegal packet check here or nah?
+
+            packetHandler(identifier, value);
+            return;
+        }
+
+        // Let this method handle general packets
         switch (identifier) {
             case "KICK":
                 // Client was kicked, so redirect to home page and show error
                 location.href = '/?error=' + value;
+                break;
+            case "START_GAME":
+                // Opponent was found, game is started
+                console.log("Start game with opponent '" + value + "'");
+                //TODO: Render things and start some listeners or something
                 break;
             default:
                 console.error("Received unknown packet: " + identifier);
@@ -72,6 +88,50 @@ function processEvent(message) {
     //TODO: Implement packet handling
 }
 
+function packetHandler(identifier, value) {
+    console.log("Game related packet (" + identifier + "): " + value)
+
+    switch (identifier) {
+        case "ABORT":
+            //TODO: Maybe use some fancy css popup instead
+            location.href = '/?error=' + value;
+            break;
+        case "INCOMING":
+            //TODO: Implement
+            break;
+        case "READY_OTHER":
+            //TODO: Implement
+            break;
+        case "DESTROY":
+            //TODO: Implement
+            break;
+        case "DESTROY":
+            //TODO: Implement
+            break;
+        default:
+            // Probs should notify user
+            break;
+    }
+}
+
+/*
+Game-related packets:
+
+    Server will understand the following packets from client:
+
+    GAME_CS_ABORT=<reason from messages.js>                                                                Game will be aborted and other player will receive a message
+    GAME_CS_DEPLOY=<type of ship: CAR/BAT/CRU/SUB/DES>%<coord of front ship>%<coord of back ship>          Server will deploy a ship of the given type on the given location
+    GAME_CS_READY=<TRUE/FALSE>                                                                             Set ready status, game phase will start if both players have flagged
+    GAME_CS_ATTACK=<coord of attack>                                                                       Server will register an attack on the given location
+
+    Server will send the following packets to client:
+
+    GAME_SC_ABORT=<reason from messages.js>                                                                Other client has aborted the game, reason is supplied
+    GAME_SC_INCOMING=<coord of incoming attack>                                                            An attack on the given location by the opponent was registered
+    GAME_SC_READY_OTHER=<TRUE/FALSE>                                                                       Ready status of opponent
+    GAME_SC_DESTROY=<type of ship: CAR/BAT/CRU/SUB/DES>                                                    The given ship was destroyed by the opponent (Not sure if needed tbh)
+    GAME_SC_WINNER=<TRUE/FALSE>                                                                            Game has ended, value indicitates whether player won or not
+*/
 
 /* Starting game */
 //TODO: Start game
