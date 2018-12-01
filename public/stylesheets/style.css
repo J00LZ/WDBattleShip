@@ -133,9 +133,6 @@ h6 {
     margin-top: 20px;
 }
 
-#gameCanvas {
-    height: 100% !important;
-}
 
 /* Julius pls fix */
 
@@ -169,10 +166,17 @@ h6 {
     background-color: #fefefe;
     margin: 15% auto;
     /* 15% from the top and centered */
-    padding: 20px;
     border: 1px solid #888;
     width: 80%;
     /* Could be more or less, depending on screen size */
+}
+
+#modal-head{
+    padding: 5px 20px;
+}
+
+#modal-text{
+    padding: 5px 20px 20px 20px;
 }
 
 /* The Close Button */

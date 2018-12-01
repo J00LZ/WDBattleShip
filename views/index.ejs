@@ -1,43 +1,55 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="/scripts/messages.js"></script>
-    <script src="/scripts/generic.js"></script>
-  </head>
-  <body>
-    <header class="full-width">
-      <div id="menu" class="container centered blue">
-        <h1>BattleShip</h1>
-        <a href="/"><h4 class="button blue lighter">Home</h4></a>
-        <a href="/stats"><h4 class="button blue lighter">Live stats</h4></a>
-        <a href="/about"><h4 class="button blue lighter">About</h4></a>
-      </div>
-    </header>
-    <main>
-      <div class="container">
-        <%- include(content) %>
-      </div>
-    </main>
-    <footer class="full-width">
-      <div class="container centered blue">
-          <%- include("footer.ejs") %>
-      </div>
-    </footer>
-    <button id="myBtn">Open Modal</button>
-    
-    <!-- The Modal -->
-    <div id="myModal" class="modal">
-    
-      <!-- Modal content -->
-      <div class="modal-content">
+
+<head>
+  <title>
+    <%= title %>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="/scripts/messages.js"></script>
+  <script src="/scripts/generic.js"></script>
+</head>
+
+<body>
+  <header class="full-width">
+    <div id="menu" class="container centered blue">
+      <h1>BattleShip</h1>
+      <a href="/">
+        <h4 class="button blue lighter">Home</h4>
+      </a>
+      <a href="/stats">
+        <h4 class="button blue lighter">Live stats</h4>
+      </a>
+      <a href="/about">
+        <h4 class="button blue lighter">About</h4>
+      </a>
+    </div>
+  </header>
+  <main>
+    <div class="container">
+      <%- include(content) %>
+    </div>
+  </main>
+  <footer class="full-width">
+    <div class="container centered blue">
+      <%- include("footer.ejs") %>
+    </div>
+  </footer>
+  
+  <!-- The Modal -->
+  <div id="myModal" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+      <div id="modal-head" >
         <span class="close" onclick="modal.fadeOut()">&times;</span>
         <h1 id="modal-title"></h1>
-        <p id="modal-text"></p>
       </div>
-    
+      <p id="modal-text"></p>
     </div>
-  </body>
+
+  </div>
+</body>
+
 </html>
