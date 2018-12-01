@@ -112,13 +112,13 @@ function packetHandler(identifier, value) {
         case "INCOMING":
             //TODO: Implement
             break;
+        case "TURN":
+            //TODO: Implement
+            break;
         case "READY_OTHER":
             //TODO: Implement
             break;
-        case "DESTROY":
-            //TODO: Implement
-            break;
-        case "DESTROY":
+        case "WINNER":
             //TODO: Implement
             break;
         default:
@@ -132,18 +132,36 @@ Game-related packets:
 
     Server will understand the following packets from client:
 
-    GAME_CS_ABORT=<reason from messages.js>                                                                Game will be aborted and other player will receive a message
-    GAME_CS_DEPLOY=<type of ship: CAR/BAT/CRU/SUB/DES>%<coord of front ship>%<coord of back ship>          Server will deploy a ship of the given type on the given location
-    GAME_CS_READY=<TRUE/FALSE>                                                                             Set ready status, game phase will start if both players have flagged
-    GAME_CS_ATTACK=<coord of attack>                                                                       Server will register an attack on the given location
+    GAME_CS_ABORT=<reason from messages.js>                                     Game will be aborted and other player will receive a message
+    GAME_CS_DEPLOY=<code of ship>%<coord of front ship>%<coord of back ship>    Server will deploy a ship of the given type on the given location
+    GAME_CS_READY=TOGGLE                                                        Toggle ready status, game phase will start if both players have flagged
+    GAME_CS_ATTACK=<coord of attack>                                            Server will register an attack on the given location
 
     Server will send the following packets to client:
 
-    GAME_SC_ABORT=<reason from messages.js>                                                                Other client has aborted the game, reason is supplied
-    GAME_SC_INCOMING=<coord of incoming attack>                                                            An attack on the given location by the opponent was registered
-    GAME_SC_READY_OTHER=<TRUE/FALSE>                                                                       Ready status of opponent
-    GAME_SC_DESTROY=<type of ship: CAR/BAT/CRU/SUB/DES>                                                    The given ship was destroyed by the opponent (Not sure if needed tbh)
-    GAME_SC_WINNER=<TRUE/FALSE>                                                                            Game has ended, value indicitates whether player won or not
+    GAME_SC_ABORT=<reason from messages.js>                                     Other client has aborted the game, reason is supplied
+    GAME_SC_INCOMING=<coord of incoming attack>                                 An attack on the given location by the opponent was registered
+    GAME_SC_READY_OTHER=<TRUE/FALSE>                                            Ready status of opponent
+    GAME_SC_WINNER=<TRUE/FALSE>                                                 Game has ended, value indicitates whether player won or not
+    GAME_SC_TURN=<TRUE/FALSE>                                                   Client can make a move. TRUE as value indicates the previous attack was a hit,
+                                                                                so the client can make another move. FALSE means it's just a regular turn.
+    GAME_SC_WAIT=TRUE                                                           Opponent is making a move
+
+    Ship codes:
+        Carrier: 5
+        Battleship: 4
+        Cruiser: 3
+        Destroyer: 2
+        Submarine: 1
+
+    Coordinate formatting:
+        XY
+        Ex: 00    -> (0,0)
+            10    -> (1,0)
+            19    -> (1,9)
+            (9,9) -> 99
+            (3,5) -> 35
+            (8,2) -> 82
 */
 
 /* Starting game */
