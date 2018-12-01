@@ -67,17 +67,18 @@ $(document).ready(function(){
     }
 });
 
-/*
-Everything was correctly filled in, submitting the form
-*/
+/**
+ * Everything was correctly filled in, submitting the form
+ */
 function submitForm(){
     socket.close();
     $("form#play-form").submit();
 }
 
-/*
-Display an error message
-*/
+/**
+ * Display an error message
+ * @param {string} errormsg Error message to display 
+ */
 function displayError(errormsg){
     $("#error-msg").remove();
 
@@ -85,9 +86,11 @@ function displayError(errormsg){
     $("#error-msg").fadeIn(300);
 }
 
-/*
-Checks if name is available
-*/
+/**
+ * Checks if name is available
+ * @param {string} nickname 
+ * @param {string} code 
+ */
 function verifyData(nickname, code){
     socket.send("verify-name:" + nickname);
 

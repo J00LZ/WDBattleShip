@@ -4,9 +4,9 @@ function GameManager() {
     this.games = [];
     this.players = [];
 
-    /*
-    Starts the game and lets all clients now they can go into start phase
-    */
+    /**
+     * Starts the game and lets all clients now they can go into start phase
+     */
     this.startGame = function(game) {
         let firstPlayer = game.getFirstPlayer();
         let secondPlayer = game.getSecondPlayer();
@@ -22,9 +22,9 @@ function GameManager() {
         this.sendSavePacket(secondPlayer, "START_GAME=" + firstPlayer.getName());
     }
 
-    /*
-    Aborts the given game because of the given reason
-    */
+    /**
+     * Aborts the given game because of the given reason
+     */
     this.endGame = function(game, reason) {
         console.log("Ending game with key '" + game.getKey() + "', reason: " + reason);
 
@@ -34,9 +34,9 @@ function GameManager() {
         this.removeGame(game);
     }
 
-    /*
-    Sends a packet to the player after several safety checks
-    */
+    /**
+     * Sends a packet to the player after several safety checks
+     */
     this.sendSavePacket = function(player, packet) {
         if (player !== null && player !== undefined) {
             let socket = player.getSocket();
@@ -48,9 +48,9 @@ function GameManager() {
         }
     }
 
-    /*
-    Removes given game from active games
-    */
+    /**
+     * Removes given game from active games
+     */
     this.removeGame = function(game) {
         if (game === null || game === undefined) {
             return;
@@ -68,9 +68,9 @@ function GameManager() {
         }
     }
 
-    /*
-    Handles game joining
-    */
+    /**
+     * Handles game joining
+     */
     this.joinGame = function(player, inviteCode, private){
         let game = null;
 
@@ -122,9 +122,9 @@ function GameManager() {
         this.sendSavePacket(player, "GAME_KEY=" + game.getKey());
     }
 
-    /*
-    Returns the first game that needs an extra player
-    */
+    /**
+     * Returns the first game that needs an extra player
+     */
     this.getFirstGameInQueue = function () {
         for (let i = 0; i < this.games.length; i++) {
             let game = this.games[i];
@@ -138,9 +138,9 @@ function GameManager() {
         return null;
     }
 
-    /*
-    Returns the game using the given key, if any
-    */
+    /**
+     * Returns the game using the given key, if any
+     */
     this.getGameByKey = function (key) {
         for (let i = 0; i < this.games.length; i++) {
             let game = this.games[i];
@@ -153,9 +153,9 @@ function GameManager() {
         return null;
     }
 
-    /*
-    Returns the player using the given name, if any
-    */
+    /**
+     * Returns the player using the given name, if any
+     */
     this.getPlayerByName = function (name) {
         for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
@@ -170,9 +170,9 @@ function GameManager() {
         return null;
     }
 
-    /*
-    Returns the player using the given socket, if any
-    */
+    /**
+     * Returns the player using the given socket, if any
+     */
     this.getPlayerBySocket = function (socket) {
         for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
@@ -183,9 +183,9 @@ function GameManager() {
         }
     }
 
-    /*
-    Removes player from list
-    */
+    /**
+     * Removes player from list
+     */
     this.removePlayer = function (socket) {
         for (let i = 0; i < this.players.length; i++) {
             let player = this.players[i];
@@ -206,25 +206,25 @@ function GameManager() {
         }
     }
 
-    /*
-    Checks if a given name is still available
-    True if so, false if taken
-    */
+    /**
+     * Checks if a given name is still available
+     * True if so, false if taken
+     */
     this.nameAvailable = function (name) {
         return this.getPlayerByName(name) === null;
     }
 
-    /*
-    Adds the given player to the player list
-    */
+    /**
+     * Adds the given player to the player list
+     */
     this.addPlayer = function (player, addr) {
         console.log("Adding player object (" + addr + ")");
         this.players.push(player);
     }
 
-    /*
-    Handles requests from clients
-    */
+    /**
+     * Handles requests from clients
+     */
     this.handleRequest = function handleRequest(socket, message) {
         let ids = message.split("&");
 
@@ -247,7 +247,6 @@ function GameManager() {
             if (id.startsWith("GAME_CS_")) {
                 if (id.split("_CS_").length !== 2) {
                     player.kick("MALFORMED_PACKET", "sent a malformed packet!");
-
                     return;
                 }
 
@@ -277,7 +276,6 @@ function GameManager() {
                             // On the client side we would normally send a more fitting error message
                             // However, it would cost more code to send a formatted string, so we'll just send a more general error code
                             player.kick("NICK_TAKEN", "tried to use an illegal nickname!");
-
                             return;
                         }
                     }
@@ -344,22 +342,142 @@ function GameManager() {
         }
     }
 
-    /*
-    Handles game packets
-    */
+/*
+Game-related packets:
+
+    Server will understand the following packets from client:
+
+    GAME_CS_ABORT=<reason from messages.js>                                     Game will be aborted and other player will receive a message
+    GAME_CS_DEPLOY=<code of ship>%<coord of front ship>%<coord of back ship>    Server will deploy a ship of the given type on the given location
+    GAME_CS_READY=TOGGLE                                                        Toggle ready status, game phase will start if both players have flagged
+    GAME_CS_ATTACK=<coord of attack>                                            Server will register an attack on the given location
+
+    Server will send the following packets to client:
+
+    GAME_SC_ABORT=<reason from messages.js>                                     Other client has aborted the game, reason is supplied
+    GAME_SC_INCOMING=<coord of incoming attack>                                 An attack on the given location by the opponent was registered
+    GAME_SC_READY_OTHER=<TRUE/FALSE>                                            Ready status of opponent
+    GAME_SC_WINNER=<TRUE/FALSE>                                                 Game has ended, value indicitates whether player won or not
+    GAME_SC_TURN=<TRUE/FALSE>                                                   Client can make a move. TRUE as value indicates the previous attack was a hit,
+                                                                                so the client can make another move. FALSE means it's just a regular turn.
+    GAME_SC_WAIT=TRUE                                                           Opponent is making a move
+
+    Ship codes:
+        Carrier: 5
+        Battleship: 4
+        Cruiser: 3
+        Destroyer: 2
+        Submarine: 1
+
+    Coordinate formatting:
+        XY
+        Ex: 00    -> (0,0)
+            10    -> (1,0)
+            19    -> (1,9)
+            (9,9) -> 99
+            (3,5) -> 35
+            (8,2) -> 82
+*/
+
+    /**
+     * Handles game packets
+     */
     this.handleGameRequest = function(player, identifier, value) {
+        let game = this.getGameByKey(player.getKey());
+
+        // Check if the player is in a game
+        if (game === null) {
+            player.kick("ILLEGAL_PACKET", "sent a game packet, without being in a game!");
+            return;
+        }
+
+        let gameState = game.getGameState();
+
         switch (identifier) {
             case "ABORT":
-                //TODO: Implement
+                this.endGame(game, value);
                 break;
             case "DEPLOY":
-                //TODO: Implement
+                let data = value.split("%");
+
+                // Check if all data was sent
+                if (data.length !== 3) {
+                    player.kick("MALFORMED_PACKET", "sent a deploy packet with too little/less values!");
+                    return;
+                }
+
+                // Check if the game has already started
+                if (gameState.isPlaying()) {
+                    // Kick player, game should be automatically stopped
+                    player.kick("ILLEGAl_PACKET", "tried to deploy ships while the game has already started!");
+                    return;
+                }
+
+                // Init deployment and check the result
+                if (!gameState.deploy(gameState.getField(game.getStateID(player)), data[0], data[1], data[2])) {
+                    // The deployment was illegal
+                    player.kick("ILLEGAL_PACKET", "tried to issue an illegal deployment!");
+                }
+
                 break;
             case "READY":
-                //TODO: Implement
+                // Check if the player has deployed all ships
+                if (!gameState.fieldReady(gameState.getField(game.getStateID(player)))) {
+                    // Player has not yet deployed all ships
+                    player.kick("ILLEGAL_PACKET", "tried to toggle his/her ready-state while he/she did not deploy all ships");
+                    return;
+                }
+
+                // Toggle ready status of player
+                player.ready();
+
+                // Send status to other player
+                this.sendSavePacket(game.getOpponent(player), "GAME_SC_READY_OTHER=" + (player.isReady() ? "TRUE" : "FALSE"))
+
+                // Check if we can start the game
+                if (gameState.isReady()) {
+                    gameState.startGame();
+                    console.log("Game with key '" + game.getKey() + "' has started");
+
+                    // Send play packet to first player
+                    this.sendSavePacket(player, "GAME_SC_TURN=FALSE");
+
+                    // Send wait packet to second player
+                    this.sendSavePacket(game.getOpponent(player), "GAME_SC_WAIT=TRUE ");
+                }
                 break;
             case "ATTACK":
-                //TODO: Implement
+                // Check if the game has already started
+                if (gameState.isPlaying()) {
+                    player.kick("ILLEGAl_PACKET", "tried to attack while the game has not yet already started!");
+                    return;
+                }
+
+                // Check if the its the player's turn
+                if (gameState.getTurn() !== game.getStateID(player)) {
+                    player.kick("ILLEGAL_PACKET", "tried to attack while it was not his/her turn!");
+                    return;
+                }
+
+                // Process attack
+                let hit = gameState.attack(value);
+
+                // Update scores
+                gameState.updateScores();
+
+                // Check if a player has won the game
+                let winner = gameState.getWinner();
+
+                if (winner !== -1) {
+                    // Send packets
+                    this.sendSavePacket(player, "GAME_SC_WINNER=" + (winner === 0 ? "TRUE" : "FALSE"));
+                    this.sendSavePacket(player, "GAME_SC_WINNER=" + (winner === 1 ? "TRUE" : "FALSE"));
+                    this.removeGame(game);
+                    return;
+                }
+
+                // No winner yet, give turn 
+                //TODO: Implement this
                 break;
             default:
                 // Client sent an illegal game packet
@@ -369,9 +487,9 @@ function GameManager() {
         }
     }
 
-    /*
-    Creates a semi-random game key
-    */
+    /**
+     * Creates a semi-random game key
+     */
     this.createGameKey = function createGameKey() {
         let possible = "abcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -388,9 +506,9 @@ function GameManager() {
         }
     }
 
-    /*
-    Returns game with given invite code, if any
-    */
+    /**
+     * Returns game with given invite code, if any
+     */
     this.getGameByInviteCode = function (inviteCode) {
         for (let i = 0; i < this.games.length; i++) {
             let game = this.games[i];
@@ -404,9 +522,9 @@ function GameManager() {
         return null;
     }
 
-    /*
-    Checks if the given invite code is valid
-    */
+    /**
+     * Checks if the given invite code is valid
+     */
     this.validInviteCode = function validInviteCode(code) {
         return this.getGameByInviteCode(code) !== null;
     }
