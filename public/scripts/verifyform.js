@@ -57,7 +57,7 @@ $(document).ready(function(){
         let errorMessage = Messages[error];
 
         if (errorMessage !== "undefined" && errorMessage !== undefined && errorMessage !== null){
-            displayError(errorMessage);
+            popup(errorMessage, "Error", "#ca3");
 
             // Quick fix to only show error messages once, doesn't look pretty. Maybe replace all error messages by a css popup?
             window.history.pushState({}, document.title, "/");

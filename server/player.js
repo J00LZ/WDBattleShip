@@ -56,7 +56,7 @@ function Player(socket){
     /**
      * Toggles ready status
      */
-    this.ready = function() {
+    this.toggleReady = function() {
         this.ready = !this.ready;
     }
 

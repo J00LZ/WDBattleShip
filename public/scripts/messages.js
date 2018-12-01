@@ -13,6 +13,7 @@
     exports.ABORTED_FORFEIT = "Your opponent forfeited the game!";
 
     // General messages
+    exports.LOST_CONNECTION = "Your client lost connection to the server!";
     exports.MALFORMED_PACKET = "Your client sent a malformed packet!";
     exports.ILLEGAL_PACKET = "Your client sent an illegal packet!";
 

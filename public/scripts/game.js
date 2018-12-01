@@ -21,8 +21,7 @@ socket.onopen = initConnection;
 socket.onmessage = processEvent;
 socket.onclose = function() {
     console.error("Lost connection to server");
-    
-    // TODO: Css popup or something?
+    popup(Messages.LOST_CONNECTION, "Error", "#ca3");
 }
 
 /*

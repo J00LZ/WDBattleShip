@@ -40,6 +40,7 @@ function GameState() {
     /**
      * Handles an attack on the given location
      * Returns true if the attack was a hit, false if it was a miss
+     * Will update the next ID to make a move
      */
     this.attack = function(location) {
         let x = location.charAt(0);
@@ -85,7 +86,7 @@ function GameState() {
 
         // Update ships
         for (let i = 1; i <= 5; i++) {
-            if (this.checkShip(gameField, i)) {
+            if (!this.checkShip(gameField, i)) {
                 score += 1;
             }
         }
@@ -102,6 +103,7 @@ function GameState() {
         for (let x = 0; x < 10; x++) {
             for (let y = 0; y < 10; y++) { // Would this be O(1) or O(n^2) :thinking:
                 if (this.getShipCode(gameField, x, y) === ship) {
+                    console.log(">>>" + this.getShipCode(gameField, x, y));
                     return true;
                 }
             }
@@ -202,6 +204,7 @@ function GameState() {
     this.deploy = function(gameField, ship, front, end) {
         // Check if the deploy is valid
         if (!this.verifyDeploy(gameField, ship, front, end)) {
+            console.log("Verify deploy triggered");
             return false;
         }
 
@@ -213,12 +216,21 @@ function GameState() {
     }
 
     /**
+     * Checks whether given location is withing game borders
+     * True if within borders, false otherwise
+     */
+    this.withinBorders = function(x, y) {
+        return x >= 0 && x <= 9 && y >= 0 || y <= 9;
+    }
+
+    /**
      * Checks given values on validity.
      * Returns true if the given values are valid, false otherwise
      */
     this.verifyDeploy = function(gameField, length, front, end) {
         // Check if the locations are equal
-        if (frond === end) {
+        if (front === end) {
+            console.log("Invalid deployment: locations are equal");
             return false;
         }
 
@@ -228,9 +240,9 @@ function GameState() {
         let endY = end.charAt(1);
 
         // Checking of coordinates are withing borders
-        if (frontX < 0 || frontX > 9 || frontY < 0 || frontY > 9 ||
-            endX < 0   || endX > 9   || endY < 0   || endY > 9) {
-                return false;
+        if (!this.withinBorders(frontX, frontY) || !this.withinBorders(endX, endY)) {
+            console.log("Invalid deployment: locations are outisde borders");
+            return false;
         }
 
         // Determining if the ship is vertical or horizontal
@@ -239,13 +251,14 @@ function GameState() {
 
         // Check if the coordinates are not diagonal or something
         if (horizontal && vertical) {
+            console.log("Invalid deployment: locations are diagonal");
             return false;
         }
 
         // Checking if ship length aligns with the given coordinates
         let distance = Math.abs(horizontal ? frontX - endX : frontY - endY);
 
-        return length === distance && this.checkOverlaps(gameField, front, end);
+        return length !== distance && this.checkOverlaps(gameField, front, end);
     }
 
     /**
@@ -271,7 +284,7 @@ function GameState() {
      * Refer to the top of this files for the ship codes
      */
     this.getShipCode = function(gameField, x, y) {
-        return gameField[x + y * 10];
+        return gameField[Number(x + y * 10)];
     }
 
     /**
@@ -279,7 +292,7 @@ function GameState() {
      * Refer to the top of this files for the ship codes
      */
     this.setShipCode = function(gameField, x, y, code) {
-        gameField[x + y * 10] = code;
+        gameField[Number(x + y * 10)] = code;
     }
 
     /**
@@ -290,6 +303,7 @@ function GameState() {
     this.walkPath = function(gameField, start, end, check, set) {
         if (!check && set === 0) {
             // Why would you run this method with these parameters :thonk:
+            console.log("Invalid deployment: Useless walkPath() call");
             return false;
         }
 
@@ -299,6 +313,7 @@ function GameState() {
 
         // If both are true the locations form a diagonal line, which is not allowed
         if (horizontal && vertical) {
+            console.log("Invalid deployment: locations are diagoanl (walk)");
             return false;
         }
 
@@ -313,9 +328,11 @@ function GameState() {
         let endY = end.charAt(1);
 
         // Set start + end location and static var
-        let startPath = horizontal ? startX : startY;
-        let endPath = horizontal ? endX : endY;
+        let startPath = Number(horizontal ? startX : startY);
+        let endPath = Number(horizontal ? endX : endY);
         let staticPath = horizontal ? startY : startX;
+
+        console.log("Walking from " + startPath + " to " + endPath);
 
         // Loop through all locations
         while (startPath <= endPath) {
@@ -323,6 +340,7 @@ function GameState() {
 
             // If the 'check' flag is set, check if there is overlap
             if (check && this.isOccupied(gameField, location)) {
+                console.log("Invalid deployment: found overlap at " + location + ", found: " + this.getShipCode(gameField, location.charAt(0), location.charAt(1)));
                 return false;
             }
 
@@ -331,6 +349,7 @@ function GameState() {
                 this.setShipCode(gameField, location.charAt(0), location.charAt(1), set);
             }
 
+            console.log("awd");
             startPath += 1;
         }
 

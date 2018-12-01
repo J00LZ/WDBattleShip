@@ -1,4 +1,5 @@
 var Game = require("../server/game");
+var GameState = require("../server/gamestate");
 
 function GameManager() {
     this.games = [];
@@ -103,7 +104,7 @@ function GameManager() {
             if (private || game === null){
                 // No games waiting for players, creating one
                 let key = this.createGameKey(); // Unique key
-                game = new Game(player, key, !private);
+                game = new Game(player, key, !private, new GameState());
 
                 console.log("Creating new " + (private ? "private" : "public") + " game with key '" + key + "' and player '" + player.getName() + "'");
                 this.games.push(game);
@@ -413,6 +414,17 @@ Game-related packets:
                     return;
                 }
 
+                // Check if locations are valid
+                let frontLocation = data[1];
+                let endLocation = data[2];
+
+                if (!this.validLocationString(frontLocation) || 
+                    !this.validLocationString(endLocation) ||
+                    !gameState.withinBorders(frontLocation.charAt(0), frontLocation.charAt(1)) ||
+                    !gameState.withinBorders(endLocation.charAt(0), endLocation.charAt(1))) {
+                        player.kick("MALFORMED_PACKET", "sent an invalid location string!");
+                }
+
                 // Init deployment and check the result
                 if (!gameState.deploy(gameState.getField(game.getStateID(player)), data[0], data[1], data[2])) {
                     // The deployment was illegal
@@ -429,13 +441,13 @@ Game-related packets:
                 }
 
                 // Toggle ready status of player
-                player.ready();
+                player.toggleReady();
 
                 // Send status to other player
                 this.sendSavePacket(game.getOpponent(player), "GAME_SC_READY_OTHER=" + (player.isReady() ? "TRUE" : "FALSE"))
 
                 // Check if we can start the game
-                if (gameState.isReady()) {
+                if (gameState.isReady() && player.isReady() && game.getOpponent(player).isReady()) {
                     gameState.startGame();
                     console.log("Game with key '" + game.getKey() + "' has started");
 
@@ -459,8 +471,18 @@ Game-related packets:
                     return;
                 }
 
+                // Check if location is valid
+                if (!this.validLocationString(value) || 
+                    !gameState.withinBorders(value.charAt(0), value.charAt(1))) {
+                        player.kick("MALFORMED_PACKET", "sent an invalid location string!");
+                        return;
+                }
+
                 // Process attack
                 let hit = gameState.attack(value);
+
+                // Send attack to opponent
+                this.sendSavePacket(game.getOpponent(player), "GAME_SC_INCOMING=" + value);
 
                 // Update scores
                 gameState.updateScores();
@@ -477,7 +499,12 @@ Game-related packets:
                 }
 
                 // No winner yet, give turn 
-                //TODO: Implement this
+                let nextTurnPlayer = hit ? player : game.getOpponent(player);
+                let nextTurnWait = game.getOpponent(nextTurnPlayer);
+
+                // Send packets
+                this.sendSavePacket(nextTurnPlayer, "GAME_SC_TURN=" + (nextTurnPlayer.getName() === player.getName() ? "TRUE" : "FALSE"));
+                this.sendSavePacket(nextTurnWait, "GAME_SC_WAIT=TRUE");
                 break;
             default:
                 // Client sent an illegal game packet
@@ -527,6 +554,17 @@ Game-related packets:
      */
     this.validInviteCode = function validInviteCode(code) {
         return this.getGameByInviteCode(code) !== null;
+    }
+
+    /**
+     * Checks whether given string is a valid location string
+     */
+    this.validLocationString = function(location) {
+        if (location.length !== 2) {
+            return false;
+        }
+
+        return !isNaN(location.charAt(0)) && !isNaN(location.charAt(1));
     }
 }
 
