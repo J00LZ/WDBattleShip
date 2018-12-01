@@ -12,8 +12,8 @@ let inviteCode = null;
 // let code = url.searchParams.get("code");
 // console.log(a);
 
-bod.css("background-color", "rgb(180, 180, 180)");
-jCanvas.css("background-color", "rgb(0, 0, 0)");
+// bod.css("background-color", "rgb(180, 180, 180)");
+// jCanvas.css("background-color", "rgb(0, 0, 0)");
 
 console.log("Working with name '" + nickname + "' and code '" + code + "'");
 
@@ -21,7 +21,7 @@ socket.onopen = initConnection;
 socket.onmessage = processEvent;
 socket.onclose = function() {
     console.error("Lost connection to server");
-
+    
     // TODO: Css popup or something?
 }
 
