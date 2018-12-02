@@ -21,7 +21,7 @@ socket.onopen = initConnection;
 socket.onmessage = processEvent;
 socket.onclose = function() {
     console.error("Lost connection to server");
-    popup(Messages.LOST_CONNECTION, "Error", "#ca3");
+    popup(Messages.LOST_CONNECTION, "Error", "#cc0000");
 }
 
 /*
@@ -49,7 +49,7 @@ function initConnection() {
 Handles incoming packets
 */
 function processEvent(message) {
-    console.log("Response: " + message.data);
+    debugLog("Response: " + message.data);
 
     let packets = message.data.split("&");
 
@@ -101,24 +101,34 @@ function processEvent(message) {
 }
 
 function packetHandler(identifier, value) {
-    console.log("Game related packet (" + identifier + "): " + value)
+    debugLog("Game related packet (" + identifier + "): " + value)
 
     switch (identifier) {
         case "ABORT":
-            //TODO: Maybe use some fancy css popup instead
-            location.href = '/?error=' + value;
+            popup(Messages[value], "Game aborted", "#cc0000");
             break;
         case "INCOMING":
+            console.log("Incoming attack at " + value);
+
             //TODO: Implement
             break;
         case "TURN":
+            console.log("Client can make a move, last attack was" + (value === "TRUE" ? " " : " not ") + "a hit")
+
             //TODO: Implement
             break;
         case "READY_OTHER":
+            console.log("Opponent changed ready status: " + value);
+
             //TODO: Implement
             break;
         case "WINNER":
-            //TODO: Implement
+            // Check if user won the game
+            if (value === "TRUE") {
+                popup("You won the game, congratulations!", "Game has ended!", "#DAA520")
+            } else {
+                popup("You lost the game, better luck next time!", "Game has ended!", "#8A0707")
+            }
             break;
         default:
             // Probs should notify user

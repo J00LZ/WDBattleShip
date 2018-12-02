@@ -17,6 +17,14 @@ $(document).on('click', '#submit-game-form', function(event){
 
     // Check nickname
     let i = nickname.length;
+
+    // Check length
+    if (i < 5 || i > 32) {
+        displayError(Messages.NICK_LENGTH);
+        validInput = false;
+    }
+
+    // Check chars
     while (i-- && validInput){
         let char = nickname.charAt(i);
 
@@ -32,7 +40,7 @@ $(document).on('click', '#submit-game-form', function(event){
     let regTest = pattern.test(code);
 
     // Check if regex failed and there was some input
-    if (!regTest && code.trim() !== ""){
+    if (validInput && !regTest && code.trim() !== ""){
         displayError(Messages.ILLEGAL_INVITE);
         validInput = false;
     }
@@ -57,7 +65,7 @@ $(document).ready(function(){
         let errorMessage = Messages[error];
 
         if (errorMessage !== "undefined" && errorMessage !== undefined && errorMessage !== null){
-            popup(errorMessage, "Error", "#ca3");
+            popup(errorMessage, "Error", "#cc0000");
 
             // Quick fix to only show error messages once, doesn't look pretty. Maybe replace all error messages by a css popup?
             window.history.pushState({}, document.title, "/");

@@ -7,9 +7,10 @@ var Player = require('../server/player');
 var gameManager = new GameManager();
 
 router.ws("/", function (sock, req) {
-    //console.log(sock);
     console.log("Incoming connection from: " + req.connection.remoteAddress);
-    gameManager.addPlayer(new Player(sock), req.connection.remoteAddress);
+
+    let player = new Player(sock);
+    gameManager.addPlayer(player, req.connection.remoteAddress);
 
     sock.on("message", function (message) {
         console.log("Message (" + req.connection.remoteAddress + "): " + message)
@@ -24,6 +25,12 @@ router.ws("/", function (sock, req) {
 
             let name = message.split(":")[1];
             let response = "verify-name-rsp:";
+
+            // Check if name is valid
+            if (!gameManager.validName(sock, name)) {
+                console.log("DWAd");
+                return;
+            }
 
             if (gameManager.nameAvailable(name)) {
                 response += "TRUE";

@@ -6,6 +6,7 @@
     exports.INVALID_CHAR ="The character %char% cannot be used in your %target%!";
     exports.NICK_EMPTY = "Nickname cannot be empty!";
     exports.GAME_FULL = "The game you are trying to join is full!";
+    exports.NICK_LENGTH = "Your nickname has to be between 5-32 characters in length!";
     
     // Messages related to game
     exports.ABORTED_LEFT = "Your opponent left the game";

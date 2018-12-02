@@ -223,6 +223,33 @@ function GameManager() {
         this.players.push(player);
     }
 
+    this.validName = function(socket, name) {
+        let player = this.getPlayerBySocket(socket);
+
+        // Check length
+        if (name.length < 5 || name.length > 32) {
+            player.kick("NICK_LENGTH", "tried to use an illegal nickname (length)!");
+            return false;
+        }
+
+        let illegalChars = ['&', '/', '=', ':'];
+
+        // Check nickname
+        let i = name.length;
+        while (i--) {
+            let char = name.charAt(i);
+
+            if (illegalChars.includes(char)) {
+                // On the client side we would normally send a more fitting error message
+                // However, it would cost more code to send a formatted string, so we'll just send a more general error code
+                player.kick("NICK_TAKEN", "tried to use an illegal nickname (characters)!");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /**
      * Handles requests from clients
      */
@@ -230,18 +257,21 @@ function GameManager() {
         let ids = message.split("&");
 
         for (let i = 0; i < ids.length; i++) {
+            let player = this.getPlayerBySocket(socket);
+
             if (ids[i].split("=").length !== 2) {
-                continue;
+                player.kick("MALFORMED_PACKET", "sent an empty packet!");
+                return;
             }
 
-            let player = this.getPlayerBySocket(socket);
             let id = ids[i].split("=")[0];
             let data = ids[i].split("=")[1];
 
             // Check if the packet contained data
             if (data.trim() === "") {
-                console.warn("Received empty packet from " + player.getName() + ": " + id);
-                continue;
+                console.log("Received empty packet from " + player.getName() + ": " + id);
+                player.kick("MALFORMED_PACKET", "sent an empty packet!");
+                return;
             }
 
             // Check if we can pass this to another method
@@ -262,23 +292,13 @@ function GameManager() {
                 case "NAME": // Player is requesting a name 
                     if (this.getPlayerByName(data) !== null) {
                         // Player is connected but name is in use
-                        player.kick("NICK_TAKEN");
+                        player.kick("NICK_TAKEN", "tried to use an name which was already in use!");
                         return;
                     }
 
-                    let illegalChars = ['&', '/', '=', ':'];
-
-                    // Check nickname
-                    let i = data.length;
-                    while (i--) {
-                        let char = data.charAt(i);
-
-                        if (illegalChars.includes(char)) {
-                            // On the client side we would normally send a more fitting error message
-                            // However, it would cost more code to send a formatted string, so we'll just send a more general error code
-                            player.kick("NICK_TAKEN", "tried to use an illegal nickname!");
-                            return;
-                        }
+                    // Check if name is valid
+                    if (!this.validName(socket, data)) {
+                        return;
                     }
 
                     player.setName(data);
@@ -308,6 +328,12 @@ function GameManager() {
                         return;
                     }
                     
+                    // Check if player has already joined a game
+                    if (this.getGameByKey(player.getKey()) !== null) {
+                        player.kick("ILLEGAL_PACKET", "tried to join a game, while he/she is already in a game!");
+                        return;
+                    }
+
                     // Join game
                     this.joinGame(player, player.getInviteCode(), data === "on");
 
@@ -338,6 +364,10 @@ function GameManager() {
                             // Oof
                             break;
                     }
+                    break;
+                default:
+                    // Client sent an unkown packet, we don't want that
+                    player.kick("MALFORMED_PACKET", "sent an unknown packet!");
                     break;
             }
         }
@@ -493,7 +523,7 @@ Game-related packets:
                 if (winner !== -1) {
                     // Send packets
                     this.sendSavePacket(player, "GAME_SC_WINNER=" + (winner === 0 ? "TRUE" : "FALSE"));
-                    this.sendSavePacket(player, "GAME_SC_WINNER=" + (winner === 1 ? "TRUE" : "FALSE"));
+                    this.sendSavePacket(game.getOpponent(player), "GAME_SC_WINNER=" + (winner === 1 ? "TRUE" : "FALSE"));
                     this.removeGame(game);
                     return;
                 }

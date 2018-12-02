@@ -26,7 +26,7 @@ function sendStatRequest(){
 Handles the incoming stat packets
 */
 function processStats(message){
-    console.log("Response:" + message.data);
+    debugLog("Response:" + message.data);
 
     let packets = message.data.split("&");
 

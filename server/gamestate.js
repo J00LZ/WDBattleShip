@@ -75,6 +75,7 @@ function GameState() {
      * Checks if all ships are deployed on the given field
      */
     this.fieldReady = function(gameField) {
+        console.table(gameField);
         return this.getDestroyedShips(gameField) === 0;
     }
 
@@ -82,16 +83,17 @@ function GameState() {
      * Returns amount of destroyed ships on the given field 
      */
     this.getDestroyedShips = function(gameField) {
-        let score = 0;
+        let destroyed = 0;
 
         // Update ships
         for (let i = 1; i <= 5; i++) {
             if (!this.checkShip(gameField, i)) {
-                score += 1;
+                console.log("Did not find ship: " + i);
+                destroyed += 1;
             }
         }
 
-        return score;
+        return destroyed;
     }
 
     /**
@@ -102,8 +104,8 @@ function GameState() {
         // Loop over the entire field and check if there is still a location that has the ship's code
         for (let x = 0; x < 10; x++) {
             for (let y = 0; y < 10; y++) { // Would this be O(1) or O(n^2) :thinking:
-                if (this.getShipCode(gameField, x, y) === ship) {
-                    console.log(">>>" + this.getShipCode(gameField, x, y));
+                if (this.getShipCode(gameField, x, y) == Number(ship)) {
+                    console.log(" > Found ship: " + this.getShipCode(gameField, x, y));
                     return true;
                 }
             }
@@ -124,7 +126,7 @@ function GameState() {
         // Loop over the entire field and check if there is still a location that has the ship's code
         for (let x = 0; x < 10; x++) {
             for (let y = 0; y < 10; y++) {
-                if (this.getShipCode(gameField, x, y) === ship) {
+                if (this.getShipCode(gameField, x, y) === Number(ship)) {
                     this.setShipCode(gameField, x, y, 0);
                 }
             }
@@ -151,7 +153,7 @@ function GameState() {
      * Returns the current field based on the turn
      */
     this.getCurrentField = function() {
-        return currentTurn === 0 ? this.secondField : this.firstField;
+        return this.currentTurn === 0 ? this.secondField : this.firstField;
     }
 
     /**
@@ -202,17 +204,17 @@ function GameState() {
      * Returns true if the deployment was successful, false otherwise
      */
     this.deploy = function(gameField, ship, front, end) {
+        // Remove old ship deloyment
+        this.removeShip(gameField, ship);
+
         // Check if the deploy is valid
         if (!this.verifyDeploy(gameField, ship, front, end)) {
             console.log("Verify deploy triggered");
             return false;
         }
 
-        // Remove old ship deloyment
-        this.removeShip(gameField, ship);
-
         // Populate field
-        return this.walkPath(gameField, start, end, false, ship);
+        return this.walkPath(gameField, front, end, false, ship);
     }
 
     /**
@@ -258,7 +260,7 @@ function GameState() {
         // Checking if ship length aligns with the given coordinates
         let distance = Math.abs(horizontal ? frontX - endX : frontY - endY);
 
-        return length !== distance && this.checkOverlaps(gameField, front, end);
+        return Number(length) === distance && this.checkOverlaps(gameField, front, end);
     }
 
     /**
@@ -284,7 +286,7 @@ function GameState() {
      * Refer to the top of this files for the ship codes
      */
     this.getShipCode = function(gameField, x, y) {
-        return gameField[Number(x + y * 10)];
+        return Number(gameField[Number(x) + Number(y) * 10]);
     }
 
     /**
@@ -292,7 +294,7 @@ function GameState() {
      * Refer to the top of this files for the ship codes
      */
     this.setShipCode = function(gameField, x, y, code) {
-        gameField[Number(x + y * 10)] = code;
+        gameField[Number(x) + Number(y) * 10] = Number(code);
     }
 
     /**
@@ -332,7 +334,7 @@ function GameState() {
         let endPath = Number(horizontal ? endX : endY);
         let staticPath = horizontal ? startY : startX;
 
-        console.log("Walking from " + startPath + " to " + endPath);
+        console.log("Walking from " + startPath + " to " + endPath + (check ? " (check)" : ""));
 
         // Loop through all locations
         while (startPath <= endPath) {
@@ -349,7 +351,6 @@ function GameState() {
                 this.setShipCode(gameField, location.charAt(0), location.charAt(1), set);
             }
 
-            console.log("awd");
             startPath += 1;
         }
 
