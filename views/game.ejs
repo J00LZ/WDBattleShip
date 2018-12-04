@@ -1,8 +1,13 @@
-<canvas id="gameCanvas" width="800", height="500" style="background-color:black"></canvas>
+<canvas id="gameCanvas" width="1600", height="800">
+    <h1>Your browser does not support the HTML5 canvas</h1>
+    <p>Try Chrome or Firefox or Edge or something</p>
+</canvas>
 <script>
     nickname="<%- name %>"
     code = "<%- c %>"
     private = "<%- priv %>" || "off";
 </script>
-
+<img src="/images/board.png" id="board" hidden>
+<img src="/images/boom.gif" id="boom" hidden>
+<script src="/scripts/drawing.js"></script>
 <script src="../scripts/game.js"></script>

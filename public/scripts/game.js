@@ -1,8 +1,6 @@
 var socket = new WebSocket("ws://localhost:3000/ws/");
 
 let bod = $('body');
-let jCanvas = $('#gameCanvas');
-let canvas = jCanvas[0];
 let key = null;
 let inviteCode = null;
 
