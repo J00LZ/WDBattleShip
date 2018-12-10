@@ -36,6 +36,7 @@
 
     exports.clearCanvas = function () {
         canvas.removeLayers();
+        canvas.drawLayers();
     }
 
     // The pixel multiple to snap to
