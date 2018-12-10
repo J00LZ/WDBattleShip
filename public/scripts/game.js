@@ -2,18 +2,21 @@ var socket = new WebSocket("ws://localhost:3000/ws/");
 
 let key = null;
 let inviteCode = null;
+let gameStarted = false;
+let gameEnded = false;
 
 console.log("Working with name '" + nickname + "' and code '" + code + "'");
 
 socket.onopen = initConnection;
 socket.onmessage = processEvent;
 socket.onclose = function () {
-    console.error("Lost connection to server");
-    popup(Messages.LOST_CONNECTION, "Error", "#cc0000");
+    // Only send error message when closing the socket was not intentional
+    if (!gameEnded)
+    {
+        console.error("Lost connection to server");
+        popup(Messages.LOST_CONNECTION, "Error", "#cc0000");
+    }
 }
-
-var myturn = false
-
 
 /**
  * Sets waiting message
@@ -32,9 +35,20 @@ $(document).ready(function () {
     }
 });
 
-/*
-Starts connection to game manager
-*/
+/**
+ * Sends a message using the given socket, if it is save to do so.
+ * @param {socket} socket socket to use
+ * @param {string} message message to send
+ */
+function sendSaveMessage(socket, message) {
+    if (!gameEnded && socket !== null && socket !== undefined && socket.readyState === 1) {
+        socket.send(message);
+    }
+}
+
+/**
+ * Starts the connection with the server.
+ */
 function initConnection() {
     if (nickname === null || nickname === undefined || nickname.trim() === "") {
         // If this fires the user probably went directly to the game page
@@ -50,7 +64,7 @@ function initConnection() {
         req += "&CODE=" + code;
     }
 
-    socket.send(req + "&REQUESTGAME=" + private);
+    sendSaveMessage(socket, req + "&REQUESTGAME=" + private);
 }
 
 /**
@@ -118,6 +132,9 @@ function processEvent(message) {
 function packetHandler(identifier, value) {
     debugLog("Game related packet (" + identifier + "): " + value)
 
+    // Set flag
+    gameStarted = gameStarted || !identifier.includes("READY_OTHER");
+
     switch (identifier) {
         case "ABORT":
             popup(Messages[value], "Game aborted", "#cc0000");
@@ -147,6 +164,8 @@ function packetHandler(identifier, value) {
             } else {
                 popup("You lost the game, better luck next time!", "Game has ended!", "#8A0707")
             }
+
+            gameEnded = true;
             break;
         default:
             // Probs should notify user
@@ -160,7 +179,8 @@ function packetHandler(identifier, value) {
  */
 function abortGame(reason) {
     console.log("Aborting game: " + reason);
-    socket.send("GAME_CS_ABORT=" + reason);
+
+    sendSaveMessage(socket, "GAME_CS_ABORT=" + reason);
 }
 
 /**
@@ -171,7 +191,7 @@ function abortGame(reason) {
  */
 function deployShip(shipCode, start, end) {
     console.log("Deploying ship " + shipCode + "from " + start + " to");
-    socket.send("GAME_CS_DEPLOY=" + shipCode + "%" + start + "%" + end);
+    sendSaveMessage(socket, "GAME_CS_DEPLOY=" + shipCode + "%" + start + "%" + end);
 }
 
 /**
@@ -182,9 +202,10 @@ function toggleReady() {
     var l = (Drawing.canvas.getLayer("back/Ready?").fillStyle === "#F55") || (Drawing.canvas.getLayer("back/Ready?").fillStyle == "rgb(255,85,85)")
     Drawing.canvas.animateLayer("back/Ready?", {
         fillStyle: l ? "#5F5" : "#F55"
-    })
+    });
+
     console.log("Toggled ready state");
-    socket.send("GAME_CS_READY=TOGGLE");
+    sendSaveMessage(socket, "GAME_CS_READY=TOGGLE");
 }
 
 /**
@@ -194,9 +215,13 @@ function toggleReady() {
  * @param {number} coordinate coordinate to attack
  */
 function attackShip(coordinate) {
-    if (!myturn) return
+    // Check if it's the player's turn
+    if (!myturn) {
+        return;
+    }
+
     console.log("Attacking possible ship at " + coordinate);
-    socket.send("GAME_CS_ATTACK=" + coordinate);
+    sendSaveMessage(socket, "GAME_CS_ATTACK=" + coordinate);
 }
 
 /*
@@ -251,26 +276,32 @@ Game-related docs/info:
             opponentName: the opponent's name
 */
 
-//TODO: Implement default functions
+var myturn = false
+
 onIncoming = function (x, y) {
     console.log("Incoming attack at " + x + ", " + y);
 
+    Drawing.miss(10 + 50 * x, 70 + 50 * y);
 }
 
 onTurn = function (lastAttackHit, lastAttackShip, x, y) {
     myturn = true
     console.log("Client can make a move, last attack was " + (lastAttackHit ? "a hit on ship " + lastAttackShip + " at (" + x + ", " + y + ")" : "not a hit"));
+
+    // Check if the last attack was successfull
     if (lastAttackHit) {
         Drawing.hit(Drawing.canvas.width() - 10 - 50 * 10 + 50 * x, 70 + 50 * y)
     }
+
     Drawing.canvas.setLayer("txt/It is your turn!", {
         fillStyle: 'black',
         index: 5
-    })
+    });
+
     Drawing.canvas.setLayer("txt/Opponents turn!", {
         fillStyle: 'white',
         index: -5
-    })
+    });
 }
    
 onWait = function (miss, x, y) {
@@ -278,11 +309,15 @@ onWait = function (miss, x, y) {
 
     myturn = false
 
+    if (miss) {
+        Drawing.miss(Drawing.canvas.width() - 10 - 50 * 10 + 50 * x, 70 + 50 * y)
+    }
+
     Drawing.canvas.setLayer("txt/It is your turn!", {
         fillStyle: 'white',
         index: -5
     });
-    
+
     Drawing.canvas.setLayer("txt/Opponents turn!", {
         fillStyle: 'black',
         index: 5
@@ -295,10 +330,12 @@ onReady = function (opponentReady) {
 
 onStart = function (opponentName) {
     console.log("Start game with opponent '" + opponentName + "'");
+
     Drawing.drawText((50 * 10 + 10) / 2, 30, nickname)
     Drawing.drawText(Drawing.canvas.width() - 10 - 5 * 50, 30, opponentName)
     Drawing.drawBoard(10, 70, 10)
     Drawing.drawBoard(Drawing.canvas.width() - 10 - 50 * 10, 70, 10, attackShip)
+
     // Drawing.
     Drawing.drawShip(10, 620, 1)
     Drawing.drawShip(260, 570, 2)
@@ -318,15 +355,19 @@ onStart = function (opponentName) {
         fillStyle: 'white'
     }).setLayer("txt/Opponents turn!", {
         fillStyle: 'white'
-    }).drawLayers()
-
-
-
+    }).drawLayers();
 }
+
 function manageReady() {
+    // Make sure users cannot click this button while in-game or after the game has ended
+    if (gameStarted || gameEnded) {
+        return;
+    }
+
     var boats = Drawing.canvas.getLayers(function (layer) {
         return (layer.draggable === true);
     });
+
     if (!Drawing.inBoard(10, 70, 10)) {
         popup("Please all of your ships inside the grid!", "Board not ready!", "#cc0000");
         return;
@@ -335,42 +376,33 @@ function manageReady() {
         return;
     }
     for (b in boats) {
-        var boat = boats[b]
-        var startx = (boat.x - 20) / 50
-        var starty = (boat.y - 80) / 50
-        var start = starty + startx * 10
+        var boat = boats[b];
+        var startx = (boat.x - 20) / 50;
+        var starty = (boat.y - 80) / 50;
+        var start = starty + startx * 10;
         // console.log(start)
 
         // console.log("x=" + boat.x + ", w =" + boat.width)
-        var endx = (boat.x + boat.width - 50) / 50
+        var endx = (boat.x + boat.width - 50) / 50;
         // console.log(endx)
 
         // console.log("y=" + boat.y + ", h =" + boat.height)
-        var endy = (boat.y + boat.height - 80 - 30) / 50
+        var endy = (boat.y + boat.height - 80 - 30) / 50;
         // console.log(endy)
-        var end = endy + endx * 10
+        var end = endy + endx * 10;
         // console.log(end)
 
-        var scode = Math.max(Math.abs(startx - endx), Math.abs(starty - endy)) + 1
+        var scode = Math.max(Math.abs(startx - endx), Math.abs(starty - endy)) + 1;
         // console.log("SCode=" + scode)
         // console.log("")
         if (start < 10) {
-            start = "0" + start
+            start = "0" + start;
         }
         if (end < 10) {
-            end = "0" + end
+            end = "0" + end;
         }
-        deployShip(scode, start, end)
+        deployShip(scode, start, end);
     }
 
-    toggleReady()
-
+    toggleReady();
 }
-
-
-
-/* Rendering canvas */
-
-
-/* Starting game */
-//TODO: Start game

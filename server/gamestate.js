@@ -20,7 +20,7 @@ function GameState() {
      * Sets the playing flag to true
      */
     this.startGame = function() {
-        this.player = true;
+        this.playing = true;
     }
 
     /**

@@ -442,7 +442,7 @@ Game-related packets:
                 // Check if the game has already started
                 if (gameState.isPlaying()) {
                     // Kick player, game should be automatically stopped
-                    player.kick("ILLEGAl_PACKET", "tried to deploy ships while the game has already started!");
+                    player.kick("ILLEGAL_PACKET", "tried to deploy ships while the game has already started!");
                     return;
                 }
 
@@ -472,6 +472,14 @@ Game-related packets:
                     return;
                 }
 
+                // Check if the game is already ongoing
+                if (gameState.isPlaying())
+                {
+                    // Game is already ongoing
+                    player.kick("ILLEGAL_PACKET", "tried to toggle his/her ready-state while the game has already started!");
+                    return;
+                }
+
                 // Toggle ready status of player
                 player.toggleReady();
 
@@ -492,8 +500,8 @@ Game-related packets:
                 break;
             case "ATTACK":
                 // Check if the game has already started
-                if (gameState.isPlaying()) {
-                    player.kick("ILLEGAl_PACKET", "tried to attack while the game has not yet already started!");
+                if (!gameState.isPlaying()) {
+                    player.kick("ILLEGAL_PACKET", "tried to attack while the game has not yet already started!");
                     return;
                 }
 
@@ -524,8 +532,8 @@ Game-related packets:
 
                 if (winner !== -1) {
                     // Send packets
-                    this.sendSavePacket(player, "GAME_SC_WINNER=" + (winner === 0 ? "TRUE" : "FALSE"));
-                    this.sendSavePacket(game.getOpponent(player), "GAME_SC_WINNER=" + (winner === 1 ? "TRUE" : "FALSE"));
+                    this.sendSavePacket(player, "GAME_SC_WINNER=" + (game.getStateID(player) === winner ? "TRUE" : "FALSE"));
+                    this.sendSavePacket(game.getOpponent(player), "GAME_SC_WINNER=" + (game.getStateID(game.getOpponent(player)) === winner ? "TRUE" : "FALSE"));
                     this.removeGame(game);
                     return;
                 }

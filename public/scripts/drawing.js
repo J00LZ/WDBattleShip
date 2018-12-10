@@ -22,7 +22,7 @@
                     height: 50,
                     layer: true,
                     click: function (layer) {
-                        var r = (layer.x - x_c) / 50 + (layer.y - y_c) / 50 * 10
+                        var r = (layer.y - y_c) / 50 + (layer.x - x_c) / 50 * 10
                         if (r < 10) r = "0" + r
                         fun(r)
                     }

@@ -71,9 +71,12 @@ function Player(socket){
      * Disconnects a player with the given error message
      */
     this.kick = function(message, log){
-        socket.send("KICK=" + message)
-        socket.close();
-
+        if (socket !== null && socket !== undefined && socket.readyState === 1)
+        {
+            socket.send("KICK=" + message)
+            socket.close();
+        }
+        
         console.log("Kicking player '" + this.getName() + "', because he/she " + log);
     }
 }
