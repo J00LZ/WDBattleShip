@@ -130,7 +130,9 @@ function packetHandler(identifier, value) {
             onTurn(value.includes("TRUE"), success ? Number(value.split("%")[1]) : 0, x, y);
             break;
         case "WAIT":
-            onWait();
+            let miss = value.split("%")[0] === "TRUE";
+            
+            onWait(miss, miss ? Number(value.split("%")[1].charAt(0)) : -1, miss ? Number(value.split("%")[1].charAt(1)) : -1);
             break;
         case "READY_OTHER":
             onReady(value === "TRUE");
@@ -225,7 +227,9 @@ Game-related docs/info:
         Desc:
             Will be called when the opponent is making a move
         Params:
-            NONE
+            miss: This param will be set to true if this wait is caused by a missed attack, false otherwise.
+            x: This param will be set to the X-coordinate of the failed attack if this wait is caused by a missed attack. -1 if not caused by a missed attack
+            y: This param will be set to the Y-coordinate of the failed attack if this wait is caused by a missed attack. -1 if not caused by a missed attack
     onReady
         Desc:
             Will be called when the opponent toggled his/her ready state
@@ -247,8 +251,8 @@ onTurn = function(lastAttackHit, lastAttackShip, x, y) {
     console.log("Client can make a move, last attack was " + (lastAttackHit ? "a hit on ship " + lastAttackShip + " at (" + x + ", " + y + ")": "not a hit"));
 }
 
-onWait = function() {
-    console.log("Opponent is making a move");
+onWait = function(miss, x, y) {
+    console.log("Opponent is making a move. This wait is " + (!miss ? "not " : "") + "caused by a missed attack " + (miss ? "at (" + x + "," + y + ")" : ""));
 }
 
 onReady = function(opponentReady) {

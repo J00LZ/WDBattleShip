@@ -392,7 +392,8 @@ Game-related packets:
     GAME_SC_TURN=<TRUE/FALSE>%<ship code of hit ship>%<coord>                   Client can make a move. TRUE as value indicates the previous attack was a hit,
                                                                                 so the client can make another move. If the value was TRUE a second param indicates the shipcode and the third indcates the coordinate. 
                                                                                 FALSE means it's just a regular turn.
-    GAME_SC_WAIT=TRUE                                                           Opponent is making a move
+    GAME_SC_WAIT=<TRUE/FALSE>%<coord>                                           Opponent is making a move. If TRUE this is the result of a missed attack, in this case a second param is sent indicating the location of the 
+                                                                                missed attack. In the case when this is not caused by a missed attack (i.e. the first turn) the first param is FALSE.
 
     Ship codes:
         Carrier: 5
@@ -486,7 +487,7 @@ Game-related packets:
                     this.sendSavePacket(game.getFirstPlayer(), "GAME_SC_TURN=FALSE");
 
                     // Send wait packet to second player
-                    this.sendSavePacket(game.getOpponent(game.getFirstPlayer()), "GAME_SC_WAIT=TRUE ");
+                    this.sendSavePacket(game.getOpponent(game.getFirstPlayer()), "GAME_SC_WAIT=FALSE");
                 }
                 break;
             case "ATTACK":
@@ -535,7 +536,7 @@ Game-related packets:
 
                 // Send packets
                 this.sendSavePacket(nextTurnPlayer, "GAME_SC_TURN=" + (hit.success ? "TRUE%" + hit.code + "%" + hit.coord : "FALSE"));
-                this.sendSavePacket(nextTurnWait, "GAME_SC_WAIT=TRUE");
+                this.sendSavePacket(nextTurnWait, "GAME_SC_WAIT=" + (!hit.success ? "TRUE%" + hit.coord : "FALSE"));
                 break;
             default:
                 // Client sent an illegal game packet
