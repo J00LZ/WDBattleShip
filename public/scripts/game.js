@@ -7,24 +7,27 @@ console.log("Working with name '" + nickname + "' and code '" + code + "'");
 
 socket.onopen = initConnection;
 socket.onmessage = processEvent;
-socket.onclose = function() {
+socket.onclose = function () {
     console.error("Lost connection to server");
     popup(Messages.LOST_CONNECTION, "Error", "#cc0000");
 }
 
+var myturn = false
+
+
 /**
  * Sets waiting message
  */
-$(document).ready(function(){
+$(document).ready(function () {
     //TODO: Maybe add a fancy animation
 
     // Get canvas and try to draw text centered (by subtracting half the width and height from the center of the canvas)
     if (key === null || key === undefined) {
         console.log("Drawing waiting message..");
         let canvas = $("#gameCanvas");
-        let x = canvas.width() / 2 - 205;
-        let y = canvas.height() / 2 - 45;
-    
+        let x = canvas.width() / 2;
+        let y = canvas.height() / 2;
+
         Drawing.drawText(x, y, "Waiting for opponent..");
     }
 });
@@ -88,7 +91,7 @@ function processEvent(message) {
                 // Client was kicked, so redirect to home page and show error
                 location.href = '/?error=' + value;
                 break;
-            case "START_GAME":           
+            case "START_GAME":
                 // Clear waiting message
                 console.log("Removing waiting message..")
                 Drawing.clearCanvas();
@@ -173,6 +176,11 @@ function deployShip(shipCode, start, end) {
  * Toggles the ready state of the client. The game will start if both players have toggled to 'ready'.
  */
 function toggleReady() {
+    console.log(Drawing.canvas.getLayer("back/Ready?").fillStyle)
+    var l = (Drawing.canvas.getLayer("back/Ready?").fillStyle === "#F55") || (Drawing.canvas.getLayer("back/Ready?").fillStyle == "rgb(255,85,85)")
+    Drawing.canvas.animateLayer("back/Ready?", {
+        fillStyle: l ? "#5F5" : "#F55"
+    })
     console.log("Toggled ready state");
     socket.send("GAME_CS_READY=TOGGLE");
 }
@@ -184,6 +192,7 @@ function toggleReady() {
  * @param {number} coordinate coordinate to attack
  */
 function attackShip(coordinate) {
+    if (!myturn) return
     console.log("Attacking possible ship at " + coordinate);
     socket.send("GAME_CS_ATTACK=" + coordinate);
 }
@@ -239,25 +248,118 @@ Game-related docs/info:
 */
 
 //TODO: Implement default functions
-onIncoming = function(x, y) {
+onIncoming = function (x, y) {
     console.log("Incoming attack at " + x + ", " + y);
+
 }
 
-onTurn = function(lastAttackHit, lastAttackShip, x, y) {
-    console.log("Client can make a move, last attack was " + (lastAttackHit ? "a hit on ship " + lastAttackShip + " at (" + x + ", " + y + ")": "not a hit"));
+onTurn = function (lastAttackHit, lastAttackShip, x, y) {
+    myturn = true
+    console.log("Client can make a move, last attack was " + (lastAttackHit ? "a hit on ship " + lastAttackShip + " at (" + x + ", " + y + ")" : "not a hit"));
+    if (lastAttackHit) {
+        Drawing.hit(Drawing.canvas.width() - 10 - 50 * 10 + 50 * x, 70 + 50 * y)
+    }
+    Drawing.canvas.setLayer("txt/It is your turn!", {
+        fillStyle: 'black',
+        index: 5
+    })
+    Drawing.canvas.setLayer("txt/Opponents turn!", {
+        fillStyle: 'white',
+        index: -5
+    })
 }
 
-onWait = function() {
+onWait = function () {
+    myturn = false
     console.log("Opponent is making a move");
+    Drawing.canvas.setLayer("txt/It is your turn!", {
+        fillStyle: 'white',
+        index: -5
+    })
+    Drawing.canvas.setLayer("txt/Opponents turn!", {
+        fillStyle: 'black',
+        index: 5
+    })
 }
 
-onReady = function(opponentReady) {
+onReady = function (opponentReady) {
     console.log("Opponent changed ready status: " + opponentReady);
 }
 
-onStart = function(opponentName) {
+onStart = function (opponentName) {
     console.log("Start game with opponent '" + opponentName + "'");
+    Drawing.drawText((50 * 10 + 10) / 2, 30, nickname)
+    Drawing.drawText(Drawing.canvas.width() - 10 - 5 * 50, 30, opponentName)
+    Drawing.drawBoard(10, 70, 10)
+    Drawing.drawBoard(Drawing.canvas.width() - 10 - 50 * 10, 70, 10, attackShip)
+    // Drawing.
+    Drawing.drawShip(10, 620, 1)
+    Drawing.drawShip(260, 570, 2)
+    Drawing.drawShip(360, 570, 3)
+    Drawing.drawShip(60, 620, 4)
+    Drawing.drawShip(10, 570, 5)
+
+    let x = Drawing.canvas.width() / 2;
+    let y = Drawing.canvas.height() - Drawing.canvas.height() / 8;
+    Drawing.button(x, y, "Ready?", manageReady)
+
+    let texty = Drawing.canvas.height() / 5;
+    Drawing.drawText(x, texty, "It is your turn!")
+    Drawing.drawText(x, texty + 45, "Opponents turn!")
+
+    Drawing.canvas.setLayer("txt/It is your turn!", {
+        fillStyle: 'white'
+    }).setLayer("txt/Opponents turn!", {
+        fillStyle: 'white'
+    }).drawLayers()
+
+
+
 }
+function manageReady() {
+    var boats = Drawing.canvas.getLayers(function (layer) {
+        return (layer.draggable === true);
+    });
+    if (!Drawing.inBoard(10, 70, 10)) {
+        popup("Please all of your ships inside the grid!", "Board not ready!", "#cc0000");
+        return;
+    } else if (Drawing.overlap()) {
+        popup("Please make sure your ships don't overlap!", "Overlapping ships!", "#cc0000");
+        return;
+    }
+    for (b in boats) {
+        var boat = boats[b]
+        var startx = (boat.x - 20) / 50
+        var starty = (boat.y - 80) / 50
+        var start = starty + startx * 10
+        // console.log(start)
+
+        // console.log("x=" + boat.x + ", w =" + boat.width)
+        var endx = (boat.x + boat.width - 50) / 50
+        // console.log(endx)
+
+        // console.log("y=" + boat.y + ", h =" + boat.height)
+        var endy = (boat.y + boat.height - 80 - 30) / 50
+        // console.log(endy)
+        var end = endy + endx * 10
+        // console.log(end)
+
+        var scode = Math.max(Math.abs(startx - endx), Math.abs(starty - endy)) + 1
+        // console.log("SCode=" + scode)
+        // console.log("")
+        if (start < 10) {
+            start = "0" + start
+        }
+        if (end < 10) {
+            end = "0" + end
+        }
+        deployShip(scode, start, end)
+    }
+
+    toggleReady()
+
+}
+
 
 
 /* Rendering canvas */
