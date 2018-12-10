@@ -389,8 +389,9 @@ Game-related packets:
     GAME_SC_INCOMING=<coord of incoming attack>                                 An attack on the given location by the opponent was registered
     GAME_SC_READY_OTHER=<TRUE/FALSE>                                            Ready status of opponent
     GAME_SC_WINNER=<TRUE/FALSE>                                                 Game has ended, value indicitates whether player won or not
-    GAME_SC_TURN=<TRUE/FALSE>                                                   Client can make a move. TRUE as value indicates the previous attack was a hit,
-                                                                                so the client can make another move. FALSE means it's just a regular turn.
+    GAME_SC_TURN=<TRUE/FALSE>%<ship code of hit ship>%<coord>                   Client can make a move. TRUE as value indicates the previous attack was a hit,
+                                                                                so the client can make another move. If the value was TRUE a second param indicates the shipcode and the third indcates the coordinate. 
+                                                                                FALSE means it's just a regular turn.
     GAME_SC_WAIT=TRUE                                                           Opponent is making a move
 
     Ship codes:
@@ -482,10 +483,10 @@ Game-related packets:
                     console.log("Game with key '" + game.getKey() + "' has started");
 
                     // Send play packet to first player
-                    this.sendSavePacket(player, "GAME_SC_TURN=FALSE");
+                    this.sendSavePacket(game.getFirstPlayer(), "GAME_SC_TURN=FALSE");
 
                     // Send wait packet to second player
-                    this.sendSavePacket(game.getOpponent(player), "GAME_SC_WAIT=TRUE ");
+                    this.sendSavePacket(game.getOpponent(game.getFirstPlayer()), "GAME_SC_WAIT=TRUE ");
                 }
                 break;
             case "ATTACK":
@@ -512,7 +513,7 @@ Game-related packets:
                 let hit = gameState.attack(value);
 
                 // Send attack to opponent
-                this.sendSavePacket(game.getOpponent(player), "GAME_SC_INCOMING=" + value);
+                this.sendSavePacket(game.getOpponent(player), "GAME_SC_INCOMING=" + hit.coord);
 
                 // Update scores
                 gameState.updateScores();
@@ -529,11 +530,11 @@ Game-related packets:
                 }
 
                 // No winner yet, give turn 
-                let nextTurnPlayer = hit ? player : game.getOpponent(player);
+                let nextTurnPlayer = hit.success ? player : game.getOpponent(player);
                 let nextTurnWait = game.getOpponent(nextTurnPlayer);
 
                 // Send packets
-                this.sendSavePacket(nextTurnPlayer, "GAME_SC_TURN=" + (nextTurnPlayer.getName() === player.getName() ? "TRUE" : "FALSE"));
+                this.sendSavePacket(nextTurnPlayer, "GAME_SC_TURN=" + (hit.success ? "TRUE%" + hit.code + "%" + hit.coord : "FALSE"));
                 this.sendSavePacket(nextTurnWait, "GAME_SC_WAIT=TRUE");
                 break;
             default:

@@ -49,18 +49,20 @@ function GameState() {
 
         // Check if the attack resulted in a hit
         if (this.isOccupied(gameField, location)) {
+            let hit = this.getShipCode(gameField, x, y);
+
             // Reset ship code at location
             this.setShipCode(gameField, x, y, 0);
 
             // Indicate hit
-            return true;
+            return {success: true, code: hit, coord: x + "" + y};
         }
 
         // No hit so the other player can make a turn
         this.currentTurn = (this.currentTurn + 1) % 2;
 
         // Indicate miss
-        return false;
+        return {success: false, code: 0, coord: x + "" + y};
     }
 
     /**
@@ -230,12 +232,6 @@ function GameState() {
      * Returns true if the given values are valid, false otherwise
      */
     this.verifyDeploy = function(gameField, length, front, end) {
-        // Check if the locations are equal
-        if (front === end) {
-            console.log("Invalid deployment: locations are equal");
-            return false;
-        }
-
         let frontX = front.charAt(0);
         let frontY = front.charAt(1);
         let endX = end.charAt(0);
@@ -243,7 +239,7 @@ function GameState() {
 
         // Checking of coordinates are withing borders
         if (!this.withinBorders(frontX, frontY) || !this.withinBorders(endX, endY)) {
-            console.log("Invalid deployment: locations are outisde borders");
+            console.log("Invalid deployment: locations are outside borders");
             return false;
         }
 
@@ -252,15 +248,21 @@ function GameState() {
         let vertical = frontX === endX;
 
         // Check if the coordinates are not diagonal or something
-        if (horizontal && vertical) {
+        if (horizontal && vertical && front !== end) {
             console.log("Invalid deployment: locations are diagonal");
             return false;
         }
 
         // Checking if ship length aligns with the given coordinates
-        let distance = Math.abs(horizontal ? frontX - endX : frontY - endY);
+        let distance = Math.abs(horizontal ? frontX - endX : frontY - endY) + 1;
 
-        return Number(length) === distance && this.checkOverlaps(gameField, front, end);
+        if (Number(length) !== distance)
+        {
+            console.log("Invalid deployment: length is different from coordinates (l: " + length + " vs c: " + distance + ") ");
+            return false;
+        }
+
+        return this.checkOverlaps(gameField, front, end);
     }
 
     /**
@@ -314,8 +316,8 @@ function GameState() {
         let vertical = start.charAt(0) === end.charAt(0);
 
         // If both are true the locations form a diagonal line, which is not allowed
-        if (horizontal && vertical) {
-            console.log("Invalid deployment: locations are diagoanl (walk)");
+        if (horizontal && vertical && start !== end) {
+            console.log("Invalid deployment: locations are diagonal (walk)");
             return false;
         }
 
