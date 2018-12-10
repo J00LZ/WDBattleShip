@@ -35,12 +35,7 @@
     }
 
     exports.clearCanvas = function () {
-        canvas.drawRect({
-            fillStyle: "white",
-            x: 0, y: 0,
-            width: 2000, height: 1000,
-            fromCenter: false
-        })
+        canvas.removeLayers();
     }
 
     // The pixel multiple to snap to
@@ -110,6 +105,35 @@
 
         return false
 
+    }
+
+    exports.miss = function (x, y) {
+        canvas.drawPath({
+            strokeStyle: '#F22',
+            strokeWidth: 10,
+            rounded: true,
+            layer: true,
+            p2: {
+                type: 'line',
+                x1: x + 8, y1: y + 8,
+                x2: x + 42, y2: y + 42
+            },
+            p1: {
+                type: 'line',
+                x1: x + 8, y1: y + 42,
+                x2: x + 42, y2: y + 8
+            }
+        });
+    }
+
+    exports.hit = function (x, y) {
+        canvas.drawArc({
+            strokeStyle: '#2F2',
+            strokeWidth: 5,
+            x: x + 25, y: y + 25,
+            radius: 17,
+            layer:true
+        });
     }
 
 
