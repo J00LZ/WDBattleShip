@@ -48,36 +48,70 @@
     // Round the given value to the nearest multiple of n
     function nearest(value, n, corneranchor) {
 
-        return Math.round(value / n) * n+corneranchor;
+        return Math.round(value / n) * n + corneranchor;
     }
-    exports.drawShip = function (x, y, sideways, length, snapto, corneranchorx, corneranchory) {
-        len = length * 50 - 20
-        wid = 30
+    exports.drawShip = function (x, y, length, snapto) {
+        let len = length * 50 - 20
+        let wid = 30
         canvas.drawRect({
             fillStyle: "lightblue",
             strokeStyle: 'blue',
             strokeWidth: 4,
             x: 10 + x, y: 10 + y,
             fromCenter: false,
-            width: sideways ? len : wid,
-            height: sideways ? wid : len,
+            width: wid,
+            height: len,
             layer: true,
             draggable: true,
             updateDragX: function (layer, x) {
-                return nearest(x, snapto, corneranchorx+10);
+                return nearest(x, snapto, 10);
             },
             updateDragY: function (layer, y) {
-                return nearest(y, snapto, corneranchory+10);
+                return nearest(y, snapto, 10);
             },
             click: function (layer) {
                 // Spin star
                 $(this).animateLayer(layer, {
-                    width: layer.width===wid ? len : wid,
-                    height: layer.height===len ? wid : len
+                    width: layer.width === wid ? len : wid,
+                    height: layer.height === len ? wid : len
                 });
             }
         })
     }
+
+    exports.getBoats = function () {
+        return canvas.getLayers(function (layer) {
+            return (layer.draggable === true);
+        });
+    }
+
+    exports.overlap = function () {
+        var boats = canvas.getLayers(function (layer) {
+            return (layer.draggable === true);
+        });
+        for (i = 0; i < boats.length; i++) {
+            var b = boats[i]
+            for (j = 0; j < boats.length; j++) {
+                c = boats[j]
+                if (b !== c) {
+                    var b_x = b.x, b_w = b.x + b.width,
+                        b_y = b.y, b_h = b.y + b.height,
+                        c_x = c.x, c_w = c.x + c.width,
+                        c_y = c.y, c_h = c.y + c.height,
+                        x_overlap = Math.max(0, Math.min(b_w, c_w) - Math.max(b_x, c_x)),
+                        y_overlap = Math.max(0, Math.min(b_h, c_h) - Math.max(b_y, c_y));
+                    if ((x_overlap * y_overlap) !== 0) {
+                        return true
+                    }
+                }
+            }
+
+        }
+
+        return false
+
+    }
+
 
 
 
