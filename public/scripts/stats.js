@@ -1,4 +1,4 @@
-var statsock = new WebSocket("ws://localhost:3000/ws");
+var statsock = new WebSocket("ws://"+window.location.hostname+":"+window.location.port+"/ws");
 statsock.onclose = function(s){
     console.log("Shutting down ws!");
 }

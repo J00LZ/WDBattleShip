@@ -1,5 +1,4 @@
-var socket = new WebSocket("ws://localhost:3000/ws/");
-
+var socket = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/ws");
 let key = null;
 let inviteCode = null;
 let gameStarted = false;

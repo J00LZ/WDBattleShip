@@ -1,4 +1,4 @@
-var socket = new WebSocket("ws://localhost:3000/ws");
+var socket = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/ws");
 
 $(document).on('click', '#submit-game-form', function(event){
     event.preventDefault();
