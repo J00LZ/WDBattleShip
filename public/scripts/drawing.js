@@ -33,7 +33,8 @@
     }
 
 
-    exports.drawText = function (x, y, text) {
+    exports.drawText = function (x, y, text, ident) {
+        if (!(ident)) ident = text
         canvas.drawText({
             text: text,
             fontFamily: 'Open Sans',
@@ -42,7 +43,7 @@
             fillStyle: 'black',
             strokeWidth: 1,
             layer: true,
-            name: "txt/" + text
+            name: "txt/" + ident
         });
     }
 

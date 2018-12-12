@@ -10,12 +10,13 @@ socket.onopen = initConnection;
 socket.onmessage = processEvent;
 socket.onclose = function () {
     // Only send error message when closing the socket was not intentional
-    if (!gameEnded)
-    {
+    if (!gameEnded) {
         console.error("Lost connection to server");
         popup(Messages.LOST_CONNECTION, "Error", "#cc0000");
     }
 }
+
+let ships = [0, 1, 2, 3, 4, 5]
 
 /**
  * Sets waiting message
@@ -150,7 +151,7 @@ function packetHandler(identifier, value) {
             break;
         case "WAIT":
             let miss = value.split("%")[0] === "TRUE";
-            
+
             onWait(miss, miss ? Number(value.split("%")[1].charAt(0)) : -1, miss ? Number(value.split("%")[1].charAt(1)) : -1);
             break;
         case "READY_OTHER":
@@ -218,6 +219,8 @@ function attackShip(coordinate) {
     if (!myturn) {
         return;
     }
+    myturn = false
+
 
     console.log("Attacking possible ship at " + coordinate);
     sendSaveMessage(socket, "GAME_CS_ATTACK=" + coordinate);
@@ -290,37 +293,43 @@ onTurn = function (lastAttackHit, lastAttackShip, x, y) {
     // Check if the last attack was successfull
     if (lastAttackHit) {
         Drawing.hit(Drawing.canvas.width() - 10 - 50 * 10 + 50 * x, 70 + 50 * y)
+
+        if ((--ships[lastAttackShip]) === 0) {
+            Drawing.canvas.setLayer("txt/hitship",{
+                fillStyle: 'black',
+                text: "Destroyed Ship " + lastAttackShip
+            }).drawLayers()
+        }
     }
 
     Drawing.canvas.setLayer("txt/It is your turn!", {
         fillStyle: 'black',
         index: 5
-    });
-
-    Drawing.canvas.setLayer("txt/Opponents turn!", {
+    }).setLayer("txt/Opponents turn!", {
         fillStyle: 'white',
         index: -5
-    });
+    }).drawLayers();
 }
-   
+
 onWait = function (miss, x, y) {
     console.log("Opponent is making a move. This wait is " + (!miss ? "not " : "") + "caused by a missed attack " + (miss ? "at (" + x + "," + y + ")" : ""));
 
-    myturn = false
 
     if (miss) {
         Drawing.miss(Drawing.canvas.width() - 10 - 50 * 10 + 50 * x, 70 + 50 * y)
     }
 
+    Drawing.canvas.setLayer("txt/hitship",{
+        fillStyle: 'white'
+    })
+
     Drawing.canvas.setLayer("txt/It is your turn!", {
         fillStyle: 'white',
         index: -5
-    });
-
-    Drawing.canvas.setLayer("txt/Opponents turn!", {
+    }).setLayer("txt/Opponents turn!", {
         fillStyle: 'black',
         index: 5
-    });
+    }).drawLayers();
 }
 
 onReady = function (opponentReady) {
@@ -349,10 +358,13 @@ onStart = function (opponentName) {
     let texty = Drawing.canvas.height() / 5;
     Drawing.drawText(x, texty, "It is your turn!")
     Drawing.drawText(x, texty + 45, "Opponents turn!")
+    Drawing.drawText(Drawing.canvas.width() / 2, Drawing.canvas.height() / 2 + Drawing.canvas.height() / 8, "Destroyed ship x", "hitship")
 
     Drawing.canvas.setLayer("txt/It is your turn!", {
         fillStyle: 'white'
     }).setLayer("txt/Opponents turn!", {
+        fillStyle: 'white'
+    }).setLayer("txt/hitship", {
         fillStyle: 'white'
     }).drawLayers();
 }
