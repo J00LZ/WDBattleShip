@@ -289,23 +289,25 @@ onIncoming = function (x, y) {
 onTurn = function (lastAttackHit, lastAttackShip, x, y) {
     myturn = true
     console.log("Client can make a move, last attack was " + (lastAttackHit ? "a hit on ship " + lastAttackShip + " at (" + x + ", " + y + ")" : "not a hit"));
-
+    Drawing.canvas.animateLayer("txt/opponent", {
+        fillStyle: "black"
+    }).drawLayers()
     // Check if the last attack was successfull
     if (lastAttackHit) {
         Drawing.hit(Drawing.canvas.width() - 10 - 50 * 10 + 50 * x, 70 + 50 * y)
 
         if ((--ships[lastAttackShip]) === 0) {
-            Drawing.canvas.setLayer("txt/hitship",{
+            Drawing.canvas.setLayer("txt/hitship", {
                 fillStyle: 'black',
                 text: "Destroyed Ship " + lastAttackShip
             }).drawLayers()
         }
     }
 
-    Drawing.canvas.setLayer("txt/It is your turn!", {
+    Drawing.canvas.animateLayer("txt/It is your turn!", {
         fillStyle: 'black',
         index: 5
-    }).setLayer("txt/Opponents turn!", {
+    }).animateLayer("txt/Opponents turn!", {
         fillStyle: 'white',
         index: -5
     }).drawLayers();
@@ -319,14 +321,18 @@ onWait = function (miss, x, y) {
         Drawing.miss(Drawing.canvas.width() - 10 - 50 * 10 + 50 * x, 70 + 50 * y)
     }
 
-    Drawing.canvas.setLayer("txt/hitship",{
+    Drawing.canvas.setLayer("txt/hitship", {
         fillStyle: 'white'
     })
 
-    Drawing.canvas.setLayer("txt/It is your turn!", {
+    Drawing.canvas.animateLayer("txt/opponent", {
+        fillStyle: "black"
+    }).drawLayers()
+
+    Drawing.canvas.animateLayer("txt/It is your turn!", {
         fillStyle: 'white',
         index: -5
-    }).setLayer("txt/Opponents turn!", {
+    }).animateLayer("txt/Opponents turn!", {
         fillStyle: 'black',
         index: 5
     }).drawLayers();
@@ -334,13 +340,16 @@ onWait = function (miss, x, y) {
 
 onReady = function (opponentReady) {
     console.log("Opponent changed ready status: " + opponentReady);
+    Drawing.canvas.animateLayer("txt/opponent", {
+        fillStyle: opponentReady ? "#4caf50" : "black"
+    }).drawLayers()
 }
 
 onStart = function (opponentName) {
     console.log("Start game with opponent '" + opponentName + "'");
 
-    Drawing.drawText((50 * 10 + 10) / 2, 30, nickname)
-    Drawing.drawText(Drawing.canvas.width() - 10 - 5 * 50, 30, opponentName)
+    Drawing.drawText((50 * 10 + 10) / 2, 30, nickname, "you")
+    Drawing.drawText(Drawing.canvas.width() - 10 - 5 * 50, 30, opponentName, "opponent")
     Drawing.drawBoard(10, 70, 10)
     Drawing.drawBoard(Drawing.canvas.width() - 10 - 50 * 10, 70, 10, attackShip)
 

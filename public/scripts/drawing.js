@@ -72,9 +72,21 @@
             layer: true,
             draggable: true,
             updateDragX: function (layer, x) {
-                return nearest(x, 50) + 20;
+                if ((x < 20 + 50 * 9) && x > 10) {
+                    return nearest(x, 50) + 20
+                } else if (x >= 20 + 50 * 9) {
+                    return nearest(20 + 50 * 9, 50) + 20;
+                } else {
+                    return nearest(20, 50) + 20
+                }
+
             },
             updateDragY: function (layer, y) {
+                if (y < 50) {
+                    return nearest(50, 50) + 30
+                } else if (y >= exports.canvas.height() - exports.canvas.height() / 8) {
+                    return nearest(exports.canvas.height() - exports.canvas.height() / 8, 50) + 30
+                }
                 return nearest(y, 50) + 30;
             },
             click: function (layer) {
