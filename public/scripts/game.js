@@ -17,6 +17,7 @@ socket.onclose = function () {
 }
 
 let ships = [0, 1, 2, 3, 4, 5]
+let hits = [""]
 
 /**
  * Sets waiting message
@@ -203,6 +204,9 @@ function toggleReady() {
     Drawing.canvas.animateLayer("back/Ready?", {
         fillStyle: l ? "#5F5" : "#F55"
     });
+    Drawing.canvas.setLayers("boats", {
+        draggable: !l
+    }).drawLayers()
 
     console.log("Toggled ready state");
     sendSaveMessage(socket, "GAME_CS_READY=TOGGLE");
@@ -212,15 +216,15 @@ function toggleReady() {
  * Attacks the possible ship at the given location.
  * Result of the attack will become clear when the onTurn event is fired:
  * If the 'lastAttackHit' param is set to true the attack was a success, otherwise it was a miss.
- * @param {number} coordinate coordinate to attack
+ * @param {string} coordinate coordinate to attack
  */
 function attackShip(coordinate) {
     // Check if it's the player's turn
-    if (!myturn) {
+    if (!myturn || hits.includes(coordinate)) {
         return;
     }
     myturn = false
-
+    hits += coordinate
 
     console.log("Attacking possible ship at " + coordinate);
     sendSaveMessage(socket, "GAME_CS_ATTACK=" + coordinate);

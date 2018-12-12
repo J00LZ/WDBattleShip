@@ -71,6 +71,8 @@
             height: len,
             layer: true,
             draggable: true,
+            groups: ['boats'],
+            bringToFront: true,
             updateDragX: function (layer, x) {
                 if ((x < 20 + 50 * 9) && x > 10) {
                     return nearest(x, 50) + 20
