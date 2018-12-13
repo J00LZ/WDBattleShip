@@ -7,8 +7,9 @@ router.post('/', function (req, res, next) {
     var nick = req.body.nickname;
     var code = req.body.code;
     var private = req.body.private;
+    res.cookie("username", nick)
 
-    res.render('index', { title: 'Battleship | Game', content: 'game.ejs', name:nick, c:code, priv:private});
+    res.render('index', { title: 'Battleship | Game', content: 'game.ejs', name: nick, c: code, priv: private });
 });
 
 module.exports = router;

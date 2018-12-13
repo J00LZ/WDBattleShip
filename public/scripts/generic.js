@@ -20,10 +20,22 @@ var popup = function (text, title, color) {
     modal.fadeIn()
 }
 
-var debugLog = function(msg) {
+var debugLog = function (msg) {
     if (window.debug) {
         console.log(msg);
     }
+}
+
+var getCookie = function (cookiename) {
+    var c = document.cookie
+    var k = c.split(";")
+    for (var i = 0; i < k.length; i++) {
+        var s = k[i].split("=")
+        if (s[0] === cookiename) {
+            return s[1]
+        }
+    }
+    return ""
 }
 
 

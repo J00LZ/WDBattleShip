@@ -1,12 +1,12 @@
 var socket = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/ws");
 
-$(document).on('click', '#submit-game-form', function(event){
+$(document).on('click', '#submit-game-form', function (event) {
     event.preventDefault();
 
     let formData = $("#play-form").serializeArray();
     let data = {};
 
-    $(formData).each(function(i, field){
+    $(formData).each(function (i, field) {
         data[field.name] = field.value;
     });
 
@@ -25,10 +25,10 @@ $(document).on('click', '#submit-game-form', function(event){
     }
 
     // Check chars
-    while (i-- && validInput){
+    while (i-- && validInput) {
         let char = nickname.charAt(i);
 
-        if (illegalChars.includes(char)){
+        if (illegalChars.includes(char)) {
             displayError(Messages.INVALID_CHAR.replace("%char%", char).replace("%target%", "name"));
             validInput = false;
         }
@@ -40,13 +40,13 @@ $(document).on('click', '#submit-game-form', function(event){
     let regTest = pattern.test(code);
 
     // Check if regex failed and there was some input
-    if (validInput && !regTest && code.trim() !== ""){
+    if (validInput && !regTest && code.trim() !== "") {
         displayError(Messages.ILLEGAL_INVITE);
         validInput = false;
     }
 
-    if (validInput){
-        if (nickname.trim() !== ""){
+    if (validInput) {
+        if (nickname.trim() !== "") {
             console.log("Verifying name '" + nickname + "' & code '" + code + "'");
             verifyData(nickname, code);
         } else {
@@ -56,7 +56,7 @@ $(document).on('click', '#submit-game-form', function(event){
 });
 
 // Check if we need to display any errors from the game
-$(document).ready(function(){
+$(document).ready(function () {
     let url = new URL(window.location.href);
     let error = url.searchParams.get("error");
 
@@ -64,7 +64,7 @@ $(document).ready(function(){
         //TODO: Maybe add something to fancify these messages a bit
         let errorMessage = Messages[error];
 
-        if (errorMessage !== "undefined" && errorMessage !== undefined && errorMessage !== null){
+        if (errorMessage !== "undefined" && errorMessage !== undefined && errorMessage !== null) {
             popup(errorMessage, "Error", "#cc0000");
 
             // Quick fix to only show error messages once, doesn't look pretty. Maybe replace all error messages by a css popup?
@@ -73,12 +73,18 @@ $(document).ready(function(){
             console.error("Recieved invalid error code: " + error);
         }
     }
+
+    var prevName = getCookie("username")
+    if (prevName !== undefined) {
+        $("#usernamebox").val(prevName)
+
+    }
 });
 
 /**
  * Everything was correctly filled in, submitting the form
  */
-function submitForm(){
+function submitForm() {
     socket.close();
     $("form#play-form").submit();
 }
@@ -87,7 +93,7 @@ function submitForm(){
  * Display an error message
  * @param {string} errormsg Error message to display 
  */
-function displayError(errormsg){
+function displayError(errormsg) {
     $("#error-msg").remove();
 
     $("div #error-box").append('<p id="error-msg" style="color: red" hidden>Error: ' + errormsg + '</p>');
@@ -99,21 +105,21 @@ function displayError(errormsg){
  * @param {string} nickname 
  * @param {string} code 
  */
-function verifyData(nickname, code){
+function verifyData(nickname, code) {
     socket.send("verify-name:" + nickname);
 
-    socket.onmessage = function(message){
+    socket.onmessage = function (message) {
         console.log("Response: " + message.data);
 
         let identifier = message.data.split(":")[0];
         let resp = message.data.split(":")[1];
 
-        switch (identifier){
+        switch (identifier) {
             case "verify-name-rsp":
                 // Check if name was available
-                if (resp === "TRUE" && code === ""){
+                if (resp === "TRUE" && code === "") {
                     submitForm();
-                } else if (resp === "TRUE" && code !== ""){
+                } else if (resp === "TRUE" && code !== "") {
                     socket.send("verify-invite:" + code);
                 } else {
                     // Name not available, notify user
@@ -122,7 +128,7 @@ function verifyData(nickname, code){
                 break;
             case "verify-invite-rsp":
                 // Check if code was valid
-                if (resp === "TRUE"){
+                if (resp === "TRUE") {
                     submitForm();
                 } else {
                     // Name not available, notify user
@@ -133,10 +139,10 @@ function verifyData(nickname, code){
                 displayError(Messages[resp]);
                 break;
             default:
-            // Ignore
-            break;
+                // Ignore
+                break;
         }
 
-        
+
     }
 }
