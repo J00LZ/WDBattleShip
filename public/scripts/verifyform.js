@@ -1,4 +1,4 @@
-var socket = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/ws");
+var socket = new WebSocket(location.protocol === "https" ? "wss" : "ws" + "://" + window.location.hostname + ":" + window.location.port + "/ws");
 
 $(document).on('click', '#submit-game-form', function (event) {
     event.preventDefault();
