@@ -1,4 +1,4 @@
-var socket = new WebSocket(location.protocol === "https" ? "wss" : "ws" + "://" + window.location.hostname + ":" + window.location.port + "/ws");
+var socket = new WebSocket(location.protocol === "https:" ? "wss" : "ws" + "://" + window.location.hostname + ":" + window.location.port + "/ws");
 let key = null;
 let inviteCode = null;
 let gameStarted = false;
