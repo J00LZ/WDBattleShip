@@ -221,10 +221,12 @@ function toggleReady() {
 function attackShip(coordinate) {
     // Check if it's the player's turn
     if (!myturn || hits.includes(coordinate)) {
+        console.log(hits.includes(coordinate) ? "AWd" : "wadawdawd");
         return;
     }
-    myturn = false
-    hits += coordinate
+    
+    myturn = false;
+    hits.push(coordinate);
 
     console.log("Attacking possible ship at " + coordinate);
     sendSaveMessage(socket, "GAME_CS_ATTACK=" + coordinate);
