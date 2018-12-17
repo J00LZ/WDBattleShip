@@ -33,6 +33,10 @@ $(document).ready(function () {
         let y = canvas.height() / 2;
 
         Drawing.drawText(x, y, "Waiting for opponent..");
+        Drawing.button(x, y + y / 4, "Click to copy Invite Code!", copyInviteCode, "18pt")
+        Drawing.canvas.setLayer("back/Click to copy Invite Code!", {
+            fillStyle: "#29b6f6"
+        }).drawLayers()
     }
 });
 
@@ -221,10 +225,9 @@ function toggleReady() {
 function attackShip(coordinate) {
     // Check if it's the player's turn
     if (!myturn || hits.includes(coordinate)) {
-        console.log(hits.includes(coordinate) ? "AWd" : "wadawdawd");
         return;
     }
-    
+
     myturn = false;
     hits.push(coordinate);
 
@@ -431,4 +434,15 @@ function manageReady() {
     }
 
     toggleReady();
+}
+
+var copyInviteCode = function () {
+
+    const el = document.createElement('textarea');
+    el.value = inviteCode;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+
 }

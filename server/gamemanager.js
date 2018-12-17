@@ -4,11 +4,11 @@ var GameState = require("../server/gamestate");
 function GameManager() {
     this.games = [];
     this.players = [];
-
+    this.playedGames = 0;
     /**
      * Starts the game and lets all clients now they can go into start phase
      */
-    this.startGame = function(game) {
+    this.startGame = function (game) {
         let firstPlayer = game.getFirstPlayer();
         let secondPlayer = game.getSecondPlayer();
 
@@ -26,7 +26,8 @@ function GameManager() {
     /**
      * Aborts the given game because of the given reason
      */
-    this.endGame = function(game, reason) {
+    this.endGame = function (game, reason) {
+        this.playedGames += 1;
         console.log("Ending game with key '" + game.getKey() + "', reason: " + reason);
 
         this.sendSavePacket(game.getFirstPlayer(), "GAME_SC_ABORT=" + reason);
@@ -38,7 +39,7 @@ function GameManager() {
     /**
      * Sends a packet to the player after several safety checks
      */
-    this.sendSavePacket = function(player, packet) {
+    this.sendSavePacket = function (player, packet) {
         if (player !== null && player !== undefined) {
             let socket = player.getSocket();
 
@@ -52,7 +53,7 @@ function GameManager() {
     /**
      * Removes given game from active games
      */
-    this.removeGame = function(game) {
+    this.removeGame = function (game) {
         if (game === null || game === undefined) {
             return;
         }
@@ -60,7 +61,7 @@ function GameManager() {
         // Loop over active games
         for (let i = 0; i < this.games.length; i++) {
             let currentGame = this.games[i];
-            
+
             // Compare codes and delete if found
             if (game.getKey() === currentGame.getKey()) {
                 this.games.splice(i, 1);
@@ -72,15 +73,15 @@ function GameManager() {
     /**
      * Handles game joining
      */
-    this.joinGame = function(player, inviteCode, private){
+    this.joinGame = function (player, inviteCode, private) {
         let game = null;
 
         // Check if player wants to join a game by invite code
-        if (inviteCode !== null){
+        if (inviteCode !== null) {
             game = this.getGameByInviteCode(inviteCode);
 
             // Invalid invite code
-            if (game === null){
+            if (game === null) {
                 player.kick("INVALID_INVITE", "supplied an invalid invite code!");
 
                 return;
@@ -95,13 +96,13 @@ function GameManager() {
             // Add player to game
             game.setSecondPlayer(player);
             player.setKey(game.getKey());
-            
+
             console.log("Player '" + player.getName() + "' joined the game with invite code '" + inviteCode + "'");
             this.startGame(game);
         } else {
             game = this.getFirstGameInQueue();
 
-            if (private || game === null){
+            if (private || game === null) {
                 // No games waiting for players, creating one
                 let key = this.createGameKey(); // Unique key
                 game = new Game(player, key, !private, new GameState());
@@ -113,10 +114,10 @@ function GameManager() {
                 // Found a game to join
                 game.setSecondPlayer(player);
                 player.setKey(game.getKey());
-    
+
                 console.log("Player '" + player.getName() + "' joined the game with key '" + game.getKey() + "'");
                 this.startGame(game);
-            }   
+            }
         }
 
         // Notify client of game key
@@ -223,7 +224,7 @@ function GameManager() {
         this.players.push(player);
     }
 
-    this.validName = function(socket, name) {
+    this.validName = function (socket, name) {
         let player = this.getPlayerBySocket(socket);
 
         // Check length
@@ -327,7 +328,7 @@ function GameManager() {
                         player.kick("ILLEGAL_PACKET", "sent an illegal packet!");
                         return;
                     }
-                    
+
                     // Check if player has already joined a game
                     if (this.getGameByKey(player.getKey()) !== null) {
                         player.kick("ILLEGAL_PACKET", "tried to join a game, while he/she is already in a game!");
@@ -354,11 +355,11 @@ function GameManager() {
                             break;
                         case "GAMES_PLAYED_TODAY":
                             //TODO: Implement
-                            socket.send(data + "=0");
+                            socket.send(data + "=" + this.playedGames);
                             break;
                         case "GAMES_PLAYED_TOTAL":
                             //TODO: Implement
-                            socket.send(data + "=0");
+                            socket.send(data + "=" + this.playedGames);
                             break;
                         default:
                             // Oof
@@ -373,49 +374,49 @@ function GameManager() {
         }
     }
 
-/*
-Game-related packets:
-
-    Server will understand the following packets from client:
-
-    GAME_CS_ABORT=<reason from messages.js>                                     Game will be aborted and other player will receive a message
-    GAME_CS_DEPLOY=<code of ship>%<coord of front ship>%<coord of back ship>    Server will deploy a ship of the given type on the given location
-    GAME_CS_READY=TOGGLE                                                        Toggle ready status, game phase will start if both players have flagged
-    GAME_CS_ATTACK=<coord of attack>                                            Server will register an attack on the given location
-
-    Server will send the following packets to client:
-
-    GAME_SC_ABORT=<reason from messages.js>                                     Other client has aborted the game, reason is supplied
-    GAME_SC_INCOMING=<coord of incoming attack>                                 An attack on the given location by the opponent was registered
-    GAME_SC_READY_OTHER=<TRUE/FALSE>                                            Ready status of opponent
-    GAME_SC_WINNER=<TRUE/FALSE>                                                 Game has ended, value indicitates whether player won or not
-    GAME_SC_TURN=<TRUE/FALSE>%<ship code of hit ship>%<coord>                   Client can make a move. TRUE as value indicates the previous attack was a hit,
-                                                                                so the client can make another move. If the value was TRUE a second param indicates the shipcode and the third indcates the coordinate. 
-                                                                                FALSE means it's just a regular turn.
-    GAME_SC_WAIT=<TRUE/FALSE>%<coord>                                           Opponent is making a move. If TRUE this is the result of a missed attack, in this case a second param is sent indicating the location of the 
-                                                                                missed attack. In the case when this is not caused by a missed attack (i.e. the first turn) the first param is FALSE.
-
-    Ship codes:
-        Carrier: 5
-        Battleship: 4
-        Cruiser: 3
-        Destroyer: 2
-        Submarine: 1
-
-    Coordinate formatting:
-        XY
-        Ex: 00    -> (0,0)
-            10    -> (1,0)
-            19    -> (1,9)
-            (9,9) -> 99
-            (3,5) -> 35
-            (8,2) -> 82
-*/
+    /*
+    Game-related packets:
+    
+        Server will understand the following packets from client:
+    
+        GAME_CS_ABORT=<reason from messages.js>                                     Game will be aborted and other player will receive a message
+        GAME_CS_DEPLOY=<code of ship>%<coord of front ship>%<coord of back ship>    Server will deploy a ship of the given type on the given location
+        GAME_CS_READY=TOGGLE                                                        Toggle ready status, game phase will start if both players have flagged
+        GAME_CS_ATTACK=<coord of attack>                                            Server will register an attack on the given location
+    
+        Server will send the following packets to client:
+    
+        GAME_SC_ABORT=<reason from messages.js>                                     Other client has aborted the game, reason is supplied
+        GAME_SC_INCOMING=<coord of incoming attack>                                 An attack on the given location by the opponent was registered
+        GAME_SC_READY_OTHER=<TRUE/FALSE>                                            Ready status of opponent
+        GAME_SC_WINNER=<TRUE/FALSE>                                                 Game has ended, value indicitates whether player won or not
+        GAME_SC_TURN=<TRUE/FALSE>%<ship code of hit ship>%<coord>                   Client can make a move. TRUE as value indicates the previous attack was a hit,
+                                                                                    so the client can make another move. If the value was TRUE a second param indicates the shipcode and the third indcates the coordinate. 
+                                                                                    FALSE means it's just a regular turn.
+        GAME_SC_WAIT=<TRUE/FALSE>%<coord>                                           Opponent is making a move. If TRUE this is the result of a missed attack, in this case a second param is sent indicating the location of the 
+                                                                                    missed attack. In the case when this is not caused by a missed attack (i.e. the first turn) the first param is FALSE.
+    
+        Ship codes:
+            Carrier: 5
+            Battleship: 4
+            Cruiser: 3
+            Destroyer: 2
+            Submarine: 1
+    
+        Coordinate formatting:
+            XY
+            Ex: 00    -> (0,0)
+                10    -> (1,0)
+                19    -> (1,9)
+                (9,9) -> 99
+                (3,5) -> 35
+                (8,2) -> 82
+    */
 
     /**
      * Handles game packets
      */
-    this.handleGameRequest = function(player, identifier, value) {
+    this.handleGameRequest = function (player, identifier, value) {
         let game = this.getGameByKey(player.getKey());
 
         // Check if the player is in a game
@@ -450,11 +451,11 @@ Game-related packets:
                 let frontLocation = data[1];
                 let endLocation = data[2];
 
-                if (!this.validLocationString(frontLocation) || 
+                if (!this.validLocationString(frontLocation) ||
                     !this.validLocationString(endLocation) ||
                     !gameState.withinBorders(frontLocation.charAt(0), frontLocation.charAt(1)) ||
                     !gameState.withinBorders(endLocation.charAt(0), endLocation.charAt(1))) {
-                        player.kick("MALFORMED_PACKET", "sent an invalid location string!");
+                    player.kick("MALFORMED_PACKET", "sent an invalid location string!");
                 }
 
                 // Init deployment and check the result
@@ -473,8 +474,7 @@ Game-related packets:
                 }
 
                 // Check if the game is already ongoing
-                if (gameState.isPlaying())
-                {
+                if (gameState.isPlaying()) {
                     // Game is already ongoing
                     player.kick("ILLEGAL_PACKET", "tried to toggle his/her ready-state while the game has already started!");
                     return;
@@ -512,10 +512,10 @@ Game-related packets:
                 }
 
                 // Check if location is valid
-                if (!this.validLocationString(value) || 
+                if (!this.validLocationString(value) ||
                     !gameState.withinBorders(value.charAt(0), value.charAt(1))) {
-                        player.kick("MALFORMED_PACKET", "sent an invalid location string!");
-                        return;
+                    player.kick("MALFORMED_PACKET", "sent an invalid location string!");
+                    return;
                 }
 
                 // Process attack
@@ -566,8 +566,8 @@ Game-related packets:
             for (var i = 0; i < 12; i++) {
                 key += possible.charAt(Math.floor(Math.random() * possible.length));
             }
-    
-            if (this.getGameByKey(key) === null){
+
+            if (this.getGameByKey(key) === null) {
                 return key;
             }
         }
@@ -599,7 +599,7 @@ Game-related packets:
     /**
      * Checks whether given string is a valid location string
      */
-    this.validLocationString = function(location) {
+    this.validLocationString = function (location) {
         if (location.length !== 2) {
             return false;
         }

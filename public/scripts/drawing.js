@@ -205,14 +205,14 @@
         });
     }
 
-    exports.button = function (x, y, text, onClick) {
+    exports.button = function (x, y, text, onClick, size) {
         canvas.drawText({
             layer: true,
             name: text,
             fillStyle: 'black',
             strokeWidth: 2,
             x: x, y: y,
-            fontSize: '36pt',
+            fontSize: size ? size : '36pt',
             fontFamily: 'Open Sans',
             click: onClick,
             text: text,
