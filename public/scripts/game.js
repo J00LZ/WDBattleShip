@@ -377,6 +377,7 @@ onStart = function (opponentName) {
     Drawing.drawText(x, texty, "It is your turn!")
     Drawing.drawText(x, texty + 45, "Opponents turn!")
     Drawing.drawText(Drawing.canvas.width() / 2, Drawing.canvas.height() / 2 + Drawing.canvas.height() / 8, "Destroyed ship x", "hitship")
+    Drawing.button(Drawing.canvas.width() - Drawing.canvas.width() / 8, y, "Fullscreen", fullscreen, "18pt")
 
     Drawing.canvas.setLayer("txt/It is your turn!", {
         fillStyle: 'white'
@@ -384,7 +385,7 @@ onStart = function (opponentName) {
         fillStyle: 'white'
     }).setLayer("txt/hitship", {
         fillStyle: 'white'
-    }).drawLayers();
+    }).setLayer().drawLayers();
 }
 
 function manageReady() {
@@ -445,4 +446,26 @@ var copyInviteCode = function () {
     document.execCommand('copy');
     document.body.removeChild(el);
 
+}
+
+var fullscreen = function (open) {
+    var elem = document.documentElement;
+    if (open === undefined) open = true;
+    if (open) {
+        if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+    } else {
+        if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
 }
